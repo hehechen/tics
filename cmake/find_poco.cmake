@@ -44,6 +44,8 @@ elseif (NOT MISSING_INTERNAL_POCO_LIBRARY)
     list (APPEND Poco_INCLUDE_DIRS
         "${ClickHouse_SOURCE_DIR}/contrib/poco/Foundation/include/"
         "${ClickHouse_SOURCE_DIR}/contrib/poco/Util/include/"
+        "/Users/tonglichen/sourcecode/tics/tics/contrib/poco/Crypto/include"
+        "/Users/tonglichen/sourcecode/tics/tics/contrib/poco/NetSSL_OpenSSL/include"
     )
 
     if (NOT DEFINED POCO_ENABLE_MONGODB OR POCO_ENABLE_MONGODB)
@@ -57,12 +59,11 @@ elseif (NOT MISSING_INTERNAL_POCO_LIBRARY)
     set (Poco_Data_LIBRARY PocoData)
 
     # TODO! fix internal ssl
-    if (OPENSSL_FOUND AND NOT USE_INTERNAL_SSL_LIBRARY)
-        set (Poco_NetSSL_FOUND 1)
-        set (Poco_NetSSL_LIBRARY PocoNetSSL)
-        set (Poco_Crypto_LIBRARY PocoCrypto)
-    endif ()
-
+    #if (OPENSSL_FOUND AND NOT USE_INTERNAL_SSL_LIBRARY)
+    set (Poco_NetSSL_FOUND 1)
+    set (Poco_NetSSL_LIBRARY PocoNetSSL)
+    set (Poco_Crypto_LIBRARY PocoCrypto)
+    #endif ()
     if (USE_STATIC_LIBRARIES AND USE_INTERNAL_ZLIB_LIBRARY)
         list (APPEND Poco_INCLUDE_DIRS
             "${ClickHouse_SOURCE_DIR}/contrib/${INTERNAL_ZLIB_NAME}/"

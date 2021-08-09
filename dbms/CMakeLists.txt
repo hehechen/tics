@@ -201,6 +201,8 @@ if (Poco_NetSSL_FOUND)
     target_link_libraries (clickhouse_common_io ${Poco_NetSSL_LIBRARY})
 endif()
 
+message (STATUS "into dbms cmake : ${OPENSSL_CRYPTO_LIBRARY}" : ${Poco_NetSSL_FOUND} : ${Poco_NetSSL_LIBRARY})
+
 target_link_libraries (dbms ${Poco_Foundation_LIBRARY})
 
 if (USE_ICU)
@@ -222,7 +224,9 @@ if (NOT USE_INTERNAL_ZSTD_LIBRARY)
     target_include_directories (dbms BEFORE PRIVATE ${ZSTD_INCLUDE_DIR})
 endif ()
 
-target_include_directories (dbms PUBLIC ${DBMS_INCLUDE_DIR})
+target_include_directories (dbms PUBLIC ${DBMS_INCLUDE_DIR} ${OPENSSL_INCLUDE_DIR})
+message (STATUS "cmake in dbms=${OPENSSL_FOUND}: ${OPENSSL_INCLUDE_DIR}: ${OPENSSL_CRYPTO_LIBRARY} : ${OPENSSL_SSL_LIBRARY}")
+target_include_directories (flash_service PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_include_directories (clickhouse_common_io PUBLIC ${DBMS_INCLUDE_DIR})
 target_include_directories (clickhouse_common_io PUBLIC ${PCG_RANDOM_INCLUDE_DIR})
 target_include_directories (clickhouse_common_io BEFORE PUBLIC ${DOUBLE_CONVERSION_INCLUDE_DIR})
