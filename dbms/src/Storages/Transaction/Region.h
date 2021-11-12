@@ -160,13 +160,13 @@ public:
 
     void assignRegion(Region && new_region);
 
-    using HandleMap = std::unordered_map<HandleID, std::tuple<Timestamp, UInt8>>;
+    using HandleMap = std::unordered_map<HandleID, std::tuple<TiDBTimestamp, UInt8>>;
 
     /// Only can be used for applying snapshot. only can be called by single thread.
     /// Try to fill record with delmark if it exists in ch but has been remove by GC in leader.
-    void compareAndCompleteSnapshot(HandleMap & handle_map, const Timestamp safe_point);
+    void compareAndCompleteSnapshot(HandleMap & handle_map, const TiDBTimestamp safe_point);
 
-    void tryCompactionFilter(const Timestamp safe_point);
+    void tryCompactionFilter(const TiDBTimestamp safe_point);
 
     RegionRaftCommandDelegate & makeRaftCommandDelegate(const KVStoreTaskLock &);
     metapb::Region getMetaRegion() const;

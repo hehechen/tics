@@ -11,7 +11,6 @@
 
 namespace DB
 {
-
 namespace ErrorCodes
 {
 extern const int BAD_ARGUMENTS;
@@ -23,20 +22,24 @@ static inline ValueType safeGetLiteralValue(const ASTPtr & ast, const String & e
 {
     if (!ast || !typeid_cast<const ASTLiteral *>(ast.get()))
         throw Exception(
-            "Database engine " + engine_name + " requested literal argument at index " + DB::toString(index), ErrorCodes::BAD_ARGUMENTS);
+            "Database engine " + engine_name + " requested literal argument at index " + DB::toString(index),
+            ErrorCodes::BAD_ARGUMENTS);
 
     return typeid_cast<const ASTLiteral *>(ast.get())->value.safeGet<ValueType>();
 }
 
 DatabasePtr DatabaseFactory::get(
-    const String & database_name, const String & metadata_path, const ASTStorage * engine_define, Context & context)
+    const String & database_name,
+    const String & metadata_path,
+    const ASTStorage * engine_define,
+    Context & context)
 {
     String engine_name = engine_define->engine->name;
     if (engine_name == "TiFlash")
     {
         TiDB::DBInfo db_info;
         UInt64 version = DatabaseTiFlash::CURRENT_VERSION;
-        Timestamp tombstone = 0;
+        TiDBTimestamp tombstone = 0;
 
         // ENGINE=TiFlash('{JSON format database info}', version)
         const ASTFunction * engine = engine_define->engine;

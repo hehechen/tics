@@ -43,7 +43,7 @@ public:
                                const SSTViewVec & snaps_,
                                const TiFlashRaftProxyHelper * proxy_helper_,
                                const DecodingStorageSchemaSnapshot & schema_snap_,
-                               Timestamp gc_safepoint_,
+                               TiDBTimestamp gc_safepoint_,
                                bool force_decode_,
                                TMTContext & tmt_,
                                size_t expected_size_ = DEFAULT_MERGE_BLOCK_SIZE);
@@ -78,7 +78,7 @@ private:
     const TiFlashRaftProxyHelper * proxy_helper{nullptr};
     const DecodingStorageSchemaSnapshot & schema_snap;
     TMTContext & tmt;
-    const Timestamp gc_safepoint;
+    const TiDBTimestamp gc_safepoint;
     size_t expected_size;
     Poco::Logger * log;
 

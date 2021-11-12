@@ -122,7 +122,7 @@ void KVStore::checkAndApplySnapshot(const RegionPtrWrap & new_region, TMTContext
                 else
                     getHandleMapByRange<Int64>(context, *tmt_storage, handle_range, handle_map);
 
-                Timestamp safe_point = PDClientHelper::getGCSafePointWithRetry(tmt.getPDClient(), /* ignore_cache= */ true);
+                TiDBTimestamp safe_point = PDClientHelper::getGCSafePointWithRetry(tmt.getPDClient(), /* ignore_cache= */ true);
                 new_region->compareAndCompleteSnapshot(handle_map, safe_point);
                 break;
             }
@@ -348,7 +348,7 @@ std::vector<UInt64> KVStore::preHandleSSTsToDTFiles(
             }
 
             // Get a gc safe point for compacting
-            Timestamp gc_safepoint = 0;
+            TiDBTimestamp gc_safepoint = 0;
             if (auto pd_client = tmt.getPDClient(); !pd_client->isMock())
             {
                 gc_safepoint = PDClientHelper::getGCSafePointWithRetry(pd_client,

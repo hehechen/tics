@@ -7,7 +7,6 @@
 
 namespace DB
 {
-
 using TableID = Int64;
 using TableIDSet = std::unordered_set<TableID>;
 
@@ -30,7 +29,7 @@ enum : ColumnID
 };
 
 using HandleID = Int64;
-using Timestamp = UInt64;
+using TiDBTimestamp = UInt64;
 
 using RegionID = UInt64;
 

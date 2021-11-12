@@ -66,7 +66,7 @@ StorageMergeTree::StorageMergeTree(const String & path_,
                                    const MergeTreeData::MergingParams & merging_params_,
                                    const MergeTreeSettings & settings_,
                                    bool has_force_restore_data_flag,
-                                   Timestamp tombstone)
+                                   TiDBTimestamp tombstone)
     : IManageableStorage{tombstone}
     , path(path_)
     , data_path_contains_database_name(db_engine_ != "TiFlash")
@@ -380,7 +380,7 @@ void StorageMergeTree::alterInternal(
 
     bool rename_column = false;
 
-    std::optional<Timestamp> tombstone = std::nullopt;
+    std::optional<TiDBTimestamp> tombstone = std::nullopt;
 
     for (const AlterCommand & param : params)
     {

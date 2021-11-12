@@ -209,7 +209,7 @@ private:
     BlockInputStreamPtr in;
 };
 
-tipb::SelectResponse executeDAGRequest(Context & context, const tipb::DAGRequest & dag_request, RegionID region_id, UInt64 region_version, UInt64 region_conf_version, Timestamp start_ts, std::vector<std::pair<DecodedTiKVKeyPtr, DecodedTiKVKeyPtr>> & key_ranges);
+tipb::SelectResponse executeDAGRequest(Context & context, const tipb::DAGRequest & dag_request, RegionID region_id, UInt64 region_version, UInt64 region_conf_version, TiDBTimestamp start_ts, std::vector<std::pair<DecodedTiKVKeyPtr, DecodedTiKVKeyPtr>> & key_ranges);
 BlockInputStreamPtr outputDAGResponse(Context & context, const DAGSchema & schema, const tipb::SelectResponse & dag_response);
 
 
@@ -408,9 +408,9 @@ BlockInputStreamPtr dbgFuncMockTiDBQuery(Context & context, const ASTs & args)
 
     String query = safeGet<String>(typeid_cast<const ASTLiteral &>(*args[0]).value);
     RegionID region_id = safeGet<RegionID>(typeid_cast<const ASTLiteral &>(*args[1]).value);
-    Timestamp start_ts = DEFAULT_MAX_READ_TSO;
+    TiDBTimestamp start_ts = DEFAULT_MAX_READ_TSO;
     if (args.size() >= 3)
-        start_ts = safeGet<Timestamp>(typeid_cast<const ASTLiteral &>(*args[2]).value);
+        start_ts = safeGet<TiDBTimestamp>(typeid_cast<const ASTLiteral &>(*args[2]).value);
     if (start_ts == 0)
         start_ts = context.getTMTContext().getPDClient()->getTS();
 
@@ -864,13 +864,13 @@ void collectUsedColumnsFromExpr(const DAGSchema & input, ASTPtr ast, std::unorde
 
 struct MPPCtx
 {
-    Timestamp start_ts;
+    TiDBTimestamp start_ts;
     Int64 partition_num;
     Int64 next_task_id;
     std::vector<Int64> sender_target_task_ids;
     std::vector<Int64> current_task_ids;
     std::vector<Int64> partition_keys;
-    MPPCtx(Timestamp start_ts_, size_t partition_num_)
+    MPPCtx(TiDBTimestamp start_ts_, size_t partition_num_)
         : start_ts(start_ts_)
         , partition_num(partition_num_)
         , next_task_id(1)
@@ -881,12 +881,12 @@ using MPPCtxPtr = std::shared_ptr<MPPCtx>;
 
 struct MPPInfo
 {
-    Timestamp start_ts;
+    TiDBTimestamp start_ts;
     Int64 partition_id;
     Int64 task_id;
     const std::vector<Int64> & sender_target_task_ids;
     const std::unordered_map<String, std::vector<Int64>> & receiver_source_task_ids_map;
-    MPPInfo(Timestamp start_ts_, Int64 partition_id_, Int64 task_id_, const std::vector<Int64> & sender_target_task_ids_, const std::unordered_map<String, std::vector<Int64>> & receiver_source_task_ids_map_)
+    MPPInfo(TiDBTimestamp start_ts_, Int64 partition_id_, Int64 task_id_, const std::vector<Int64> & sender_target_task_ids_, const std::unordered_map<String, std::vector<Int64>> & receiver_source_task_ids_map_)
         : start_ts(start_ts_)
         , partition_id(partition_id_)
         , task_id(task_id_)
@@ -2403,7 +2403,7 @@ std::tuple<QueryTasks, MakeResOutputStream> compileQuery(
     return std::make_tuple(queryPlanToQueryTasks(properties, root_executor, executor_index, context), func_wrap_output_stream);
 }
 
-tipb::SelectResponse executeDAGRequest(Context & context, const tipb::DAGRequest & dag_request, RegionID region_id, UInt64 region_version, UInt64 region_conf_version, Timestamp start_ts, std::vector<std::pair<DecodedTiKVKeyPtr, DecodedTiKVKeyPtr>> & key_ranges)
+tipb::SelectResponse executeDAGRequest(Context & context, const tipb::DAGRequest & dag_request, RegionID region_id, UInt64 region_version, UInt64 region_conf_version, TiDBTimestamp start_ts, std::vector<std::pair<DecodedTiKVKeyPtr, DecodedTiKVKeyPtr>> & key_ranges)
 {
     static Poco::Logger * log = &Poco::Logger::get("MockDAG");
     LOG_DEBUG(log, __PRETTY_FUNCTION__ << ": Handling DAG request: " << dag_request.DebugString());

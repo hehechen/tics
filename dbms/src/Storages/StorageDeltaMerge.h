@@ -139,7 +139,7 @@ protected:
         const DM::OptionTableInfoConstRef table_info_,
         const ColumnsDescription & columns_,
         const ASTPtr & primary_expr_ast_,
-        Timestamp tombstone,
+        TiDBTimestamp tombstone,
         Context & global_context_);
 
     Block buildInsertBlock(bool is_import, bool is_delete, const Block & block);

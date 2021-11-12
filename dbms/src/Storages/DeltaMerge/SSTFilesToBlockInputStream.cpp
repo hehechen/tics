@@ -29,7 +29,7 @@ SSTFilesToBlockInputStream::SSTFilesToBlockInputStream( //
     const SSTViewVec & snaps_,
     const TiFlashRaftProxyHelper * proxy_helper_,
     const DecodingStorageSchemaSnapshot & schema_snap_,
-    Timestamp gc_safepoint_,
+    TiDBTimestamp gc_safepoint_,
     bool force_decode_,
     TMTContext & tmt_,
     size_t expected_size_)

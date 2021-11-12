@@ -57,7 +57,7 @@ StorageDeltaMerge::StorageDeltaMerge(
     const OptionTableInfoConstRef table_info_,
     const ColumnsDescription & columns_,
     const ASTPtr & primary_expr_ast_,
-    Timestamp tombstone,
+    TiDBTimestamp tombstone,
     Context & global_context_)
     : IManageableStorage{columns_, tombstone}
     , data_path_contains_database_name(db_engine != "TiFlash")
@@ -872,7 +872,7 @@ static void updateDeltaMergeTableCreateStatement(
     const ColumnsDescription & columns,
     const OrderedNameSet & hidden_columns,
     const OptionTableInfoConstRef table_info,
-    Timestamp tombstone,
+    TiDBTimestamp tombstone,
     const Context & context);
 
 inline OptionTableInfoConstRef getTableInfoForCreateStatement(
@@ -1149,7 +1149,7 @@ void updateDeltaMergeTableCreateStatement(
     const ColumnsDescription & columns,
     const OrderedNameSet & hidden_columns,
     const OptionTableInfoConstRef table_info,
-    Timestamp tombstone,
+    TiDBTimestamp tombstone,
     const Context & context)
 {
     /// Filter out hidden columns in the `create table statement`

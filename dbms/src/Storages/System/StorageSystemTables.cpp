@@ -20,7 +20,6 @@
 
 namespace DB
 {
-
 namespace ErrorCodes
 {
 extern const int CANNOT_GET_CREATE_TABLE_QUERY;
@@ -29,7 +28,6 @@ extern const int CANNOT_GET_CREATE_TABLE_QUERY;
 /// Some virtual columns routines
 namespace
 {
-
 bool hasColumn(const ColumnsWithTypeAndName & columns, const String & column_name)
 {
     for (const auto & column : columns)
@@ -57,7 +55,8 @@ NameAndTypePair tryGetColumn(const ColumnsWithTypeAndName & columns, const Strin
 struct VirtualColumnsProcessor
 {
     explicit VirtualColumnsProcessor(const ColumnsWithTypeAndName & all_virtual_columns_)
-        : all_virtual_columns(all_virtual_columns_), virtual_columns_mask(all_virtual_columns_.size(), 0)
+        : all_virtual_columns(all_virtual_columns_)
+        , virtual_columns_mask(all_virtual_columns_.size(), 0)
     {}
 
     /// Separates real and virtual column names, returns real ones
@@ -117,7 +116,8 @@ protected:
 } // namespace
 
 
-StorageSystemTables::StorageSystemTables(const std::string & name_) : name(name_)
+StorageSystemTables::StorageSystemTables(const std::string & name_)
+    : name(name_)
 {
     setColumns(ColumnsDescription({
         {"database", std::make_shared<DataTypeString>()},
@@ -133,7 +133,8 @@ StorageSystemTables::StorageSystemTables(const std::string & name_) : name(name_
     }));
 
     virtual_columns = {{std::make_shared<DataTypeDateTime>(), "metadata_modification_time"},
-        {std::make_shared<DataTypeString>(), "create_table_query"}, {std::make_shared<DataTypeString>(), "engine_full"}};
+                       {std::make_shared<DataTypeString>(), "create_table_query"},
+                       {std::make_shared<DataTypeString>(), "engine_full"}};
 }
 
 
@@ -150,11 +151,11 @@ static ColumnPtr getFilteredDatabases(const ASTPtr & query, const Context & cont
 
 
 BlockInputStreams StorageSystemTables::read(const Names & column_names,
-    const SelectQueryInfo & query_info,
-    const Context & context,
-    QueryProcessingStage::Enum & processed_stage,
-    const size_t /*max_block_size*/,
-    const unsigned /*num_streams*/)
+                                            const SelectQueryInfo & query_info,
+                                            const Context & context,
+                                            QueryProcessingStage::Enum & processed_stage,
+                                            const size_t /*max_block_size*/,
+                                            const unsigned /*num_streams*/)
 {
     processed_stage = QueryProcessingStage::FetchColumns;
 
@@ -204,7 +205,7 @@ BlockInputStreams StorageSystemTables::read(const Names & column_names,
             String tidb_database_name;
             String tidb_table_name;
             TableID table_id = -1;
-            Timestamp tombstone = 0;
+            TiDBTimestamp tombstone = 0;
             if (engine_name == MutableSupport::txn_storage_name || engine_name == MutableSupport::delta_tree_storage_name)
             {
                 auto managed_storage = std::dynamic_pointer_cast<IManageableStorage>(iterator->table());

@@ -479,7 +479,7 @@ private:
 
     MergeDeltaTaskPool background_tasks;
 
-    std::atomic<DB::Timestamp> latest_gc_safe_point = 0;
+    std::atomic<DB::TiDBTimestamp> latest_gc_safe_point = 0;
 
     RowKeyValue next_gc_check_key;
 

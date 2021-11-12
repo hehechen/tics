@@ -614,7 +614,7 @@ void Region::assignRegion(Region && new_region)
 }
 
 /// try to clean illegal data because of feature `compaction filter`
-void Region::tryCompactionFilter(const Timestamp safe_point)
+void Region::tryCompactionFilter(const TiDBTimestamp safe_point)
 {
     size_t del_write = 0;
     auto & write_map = data.writeCF().getDataMut();
@@ -650,7 +650,7 @@ void Region::tryCompactionFilter(const Timestamp safe_point)
     }
 }
 
-void Region::compareAndCompleteSnapshot(HandleMap & handle_map, const Timestamp safe_point)
+void Region::compareAndCompleteSnapshot(HandleMap & handle_map, const TiDBTimestamp safe_point)
 {
     std::unique_lock<std::shared_mutex> lock(mutex);
 

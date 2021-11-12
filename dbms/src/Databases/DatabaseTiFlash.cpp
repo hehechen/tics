@@ -42,7 +42,7 @@ extern const char exception_before_rename_table_old_meta_removed[];
 
 static constexpr size_t METADATA_FILE_BUFFER_SIZE = 32768;
 
-DatabaseTiFlash::DatabaseTiFlash(String name_, const String & metadata_path_, const TiDB::DBInfo & db_info_, DatabaseTiFlash::Version version_, Timestamp tombstone_, const Context & context)
+DatabaseTiFlash::DatabaseTiFlash(String name_, const String & metadata_path_, const TiDB::DBInfo & db_info_, DatabaseTiFlash::Version version_, TiDBTimestamp tombstone_, const Context & context)
     : DatabaseWithOwnTablesBase(std::move(name_))
     , metadata_path(metadata_path_)
     , data_path(context.getPath() + "data/")
@@ -492,7 +492,7 @@ void DatabaseTiFlash::shutdown()
     tables.clear();
 }
 
-void DatabaseTiFlash::alterTombstone(const Context & context, Timestamp tombstone_)
+void DatabaseTiFlash::alterTombstone(const Context & context, TiDBTimestamp tombstone_)
 {
     const auto database_metadata_path = getDatabaseMetadataPath(metadata_path);
     const auto database_metadata_tmp_path = database_metadata_path + ".tmp";

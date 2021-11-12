@@ -269,9 +269,9 @@ public:
         const RowKeyRange & check_range,
         bool is_exact);
 
-    DB::Timestamp getLastCheckGCSafePoint() { return last_check_gc_safe_point.load(std::memory_order_relaxed); }
+    DB::TiDBTimestamp getLastCheckGCSafePoint() { return last_check_gc_safe_point.load(std::memory_order_relaxed); }
 
-    void setLastCheckGCSafePoint(DB::Timestamp gc_safe_point) { last_check_gc_safe_point.store(gc_safe_point, std::memory_order_relaxed); }
+    void setLastCheckGCSafePoint(DB::TiDBTimestamp gc_safe_point) { last_check_gc_safe_point.store(gc_safe_point, std::memory_order_relaxed); }
 
 private:
     ReadInfo getReadInfo(
@@ -364,7 +364,7 @@ private:
     const PageId segment_id;
     const PageId next_segment_id;
 
-    std::atomic<DB::Timestamp> last_check_gc_safe_point = 0;
+    std::atomic<DB::TiDBTimestamp> last_check_gc_safe_point = 0;
 
     const DeltaValueSpacePtr delta;
     const StableValueSpacePtr stable;

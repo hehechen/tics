@@ -50,7 +50,7 @@ void RegionData::remove(ColumnFamilyType cf, const TiKVKey & key)
     {
         auto raw_key = RecordKVFormat::decodeTiKVKey(key);
         auto pk = RecordKVFormat::getRawTiDBPK(raw_key);
-        Timestamp ts = RecordKVFormat::getTs(key);
+        TiDBTimestamp ts = RecordKVFormat::getTs(key);
         // removed by gc, may not exist.
         cf_data_size -= write_cf.remove(RegionWriteCFData::Key{pk, ts}, true);
         return;
@@ -59,7 +59,7 @@ void RegionData::remove(ColumnFamilyType cf, const TiKVKey & key)
     {
         auto raw_key = RecordKVFormat::decodeTiKVKey(key);
         auto pk = RecordKVFormat::getRawTiDBPK(raw_key);
-        Timestamp ts = RecordKVFormat::getTs(key);
+        TiDBTimestamp ts = RecordKVFormat::getTs(key);
         // removed by gc, may not exist.
         cf_data_size -= default_cf.remove(RegionDefaultCFData::Key{pk, ts}, true);
         return;

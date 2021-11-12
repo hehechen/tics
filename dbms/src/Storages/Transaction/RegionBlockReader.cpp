@@ -104,7 +104,7 @@ void setPKVersionDel(ColumnUInt8 & delmark_col,
                      std::vector<ColumnID> & pk_column_ids,
                      ColumnDataInfoMap & column_map,
                      const RegionDataReadInfoList & data_list,
-                     const Timestamp tso,
+                     const TiDBTimestamp tso,
                      RegionScanFilterPtr scan_filter)
 {
     ColumnUInt8::Container & delmark_data = delmark_col.getData();
@@ -169,7 +169,7 @@ bool setColumnValues(ColumnUInt8 & delmark_col,
                      ColumnIdToIndex & column_lut,
                      ColumnDataInfoMap & column_map,
                      const RegionDataReadInfoList & data_list,
-                     const Timestamp tso,
+                     const TiDBTimestamp tso,
                      bool need_decode_value,
                      const TableInfo & table_info,
                      bool force_decode,

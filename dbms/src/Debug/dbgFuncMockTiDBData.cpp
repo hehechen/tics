@@ -10,7 +10,6 @@
 
 namespace DB
 {
-
 namespace ErrorCodes
 {
 extern const int BAD_ARGUMENTS;
@@ -58,7 +57,8 @@ void dbgInsertRowFull(Context & context, const ASTs & args, DBGInvoker::Printer 
 {
     if (args.size() < 6)
         throw Exception(
-            "Args not matched, should be: database-name, table-name, region-id, handle-id, tso, del, values", ErrorCodes::BAD_ARGUMENTS);
+            "Args not matched, should be: database-name, table-name, region-id, handle-id, tso, del, values",
+            ErrorCodes::BAD_ARGUMENTS);
 
     const String & database_name = typeid_cast<const ASTIdentifier &>(*args[0]).name;
     const String & table_name = typeid_cast<const ASTIdentifier &>(*args[1]).name;
@@ -67,10 +67,10 @@ void dbgInsertRowFull(Context & context, const ASTs & args, DBGInvoker::Printer 
     HandleID handle_id = 0;
     if (handle_field.getType() == Field::Types::Int64 || handle_field.getType() == Field::Types::UInt64)
         handle_id = (HandleID)safeGet<UInt64>(handle_field);
-    Timestamp tso = (Timestamp)safeGet<UInt64>(typeid_cast<const ASTLiteral &>(*args[4]).value);
+    TiDBTimestamp tso = (TiDBTimestamp)safeGet<UInt64>(typeid_cast<const ASTLiteral &>(*args[4]).value);
     UInt8 del = (UInt8)safeGet<UInt64>(typeid_cast<const ASTLiteral &>(*args[5]).value);
 
-    using TsoDel = std::tuple<Timestamp, UInt8>;
+    using TsoDel = std::tuple<TiDBTimestamp, UInt8>;
     std::optional<TsoDel> extra_data = TsoDel{tso, del};
 
     MockTiDB::TablePtr table = MockTiDB::instance().getTableByName(database_name, table_name);
@@ -82,9 +82,15 @@ void dbgInsertRowFull(Context & context, const ASTs & args, DBGInvoker::Printer 
     output(ss.str());
 }
 
-void dbgFuncRaftInsertRow(Context & context, const ASTs & args, DBGInvoker::Printer output) { dbgInsertRow(context, args, output); }
+void dbgFuncRaftInsertRow(Context & context, const ASTs & args, DBGInvoker::Printer output)
+{
+    dbgInsertRow(context, args, output);
+}
 
-void dbgFuncRaftInsertRowFull(Context & context, const ASTs & args, DBGInvoker::Printer output) { dbgInsertRowFull(context, args, output); }
+void dbgFuncRaftInsertRowFull(Context & context, const ASTs & args, DBGInvoker::Printer output)
+{
+    dbgInsertRowFull(context, args, output);
+}
 
 void dbgFuncRaftDeleteRow(Context & context, const ASTs & args, DBGInvoker::Printer output)
 {
@@ -132,10 +138,13 @@ void dbgInsertRows(Context & context, const ASTs & args, DBGInvoker::Printer out
     RegionBench::concurrentBatchInsert(table->table_info, concurrent_num, flush_num, batch_num, min_strlen, max_strlen, context);
 
     output("wrote " + std::to_string(concurrent_num * flush_num * batch_num) + " row to " + database_name + "." + table_name
-        + (" with raft commands"));
+           + (" with raft commands"));
 }
 
-void dbgFuncRaftInsertRows(Context & context, const ASTs & args, DBGInvoker::Printer output) { dbgInsertRows(context, args, output); }
+void dbgFuncRaftInsertRows(Context & context, const ASTs & args, DBGInvoker::Printer output)
+{
+    dbgInsertRows(context, args, output);
+}
 
 void dbgFuncRaftUpdateRows(Context & context, const ASTs & args, DBGInvoker::Printer output)
 {

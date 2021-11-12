@@ -123,8 +123,8 @@ public:
     virtual void shutdown() = 0;
 
     virtual bool isTombstone() const { return false; }
-    virtual Timestamp getTombstone() const { return 0; }
-    virtual void alterTombstone(const Context & /*context*/, Timestamp /*tombstone_*/) {}
+    virtual TiDBTimestamp getTombstone() const { return 0; }
+    virtual void alterTombstone(const Context & /*context*/, TiDBTimestamp /*tombstone_*/) {}
 
     /// Delete metadata, the deletion of which differs from the recursive deletion of the directory, if any.
     virtual void drop(const Context & context) = 0;

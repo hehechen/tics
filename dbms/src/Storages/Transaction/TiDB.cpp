@@ -806,7 +806,7 @@ try
         index_infos.clear();
     comment = obj->getValue<String>("comment");
     if (obj->has("update_timestamp"))
-        update_timestamp = obj->getValue<Timestamp>("update_timestamp");
+        update_timestamp = obj->getValue<TiDBTimestamp>("update_timestamp");
     auto partition_obj = obj->getObject("partition");
     is_partition_table = obj->has("belonging_table_id") || !partition_obj.isNull();
     if (is_partition_table)

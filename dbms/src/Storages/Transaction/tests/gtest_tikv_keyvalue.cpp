@@ -57,7 +57,12 @@ TEST(TiKVKeyValue_test, PortedTests)
     {
         std::string shor_value = "value";
         auto lock_value = RecordKVFormat::encodeLockCfValue(
-            Region::DelFlag, "primary key", 421321, std::numeric_limits<UInt64>::max(), &shor_value, 66666);
+            Region::DelFlag,
+            "primary key",
+            421321,
+            std::numeric_limits<UInt64>::max(),
+            &shor_value,
+            66666);
         auto ori_key = std::make_shared<const TiKVKey>(RecordKVFormat::genKey(1, 88888));
         auto lock = RecordKVFormat::DecodedLockCFValue(ori_key, std::make_shared<TiKVValue>(std::move(lock_value)));
         {
@@ -84,11 +89,21 @@ TEST(TiKVKeyValue_test, PortedTests)
             auto k1 = RecordKVFormat::genKey(1, 123);
             auto k2 = RecordKVFormat::genKey(1, 124);
             d.insert(TiKVKey::copyFrom(k1),
-                RecordKVFormat::encodeLockCfValue(
-                    Region::PutFlag, "primary key", 8765, std::numeric_limits<UInt64>::max(), nullptr, 66666));
+                     RecordKVFormat::encodeLockCfValue(
+                         Region::PutFlag,
+                         "primary key",
+                         8765,
+                         std::numeric_limits<UInt64>::max(),
+                         nullptr,
+                         66666));
             d.insert(TiKVKey::copyFrom(k2),
-                RecordKVFormat::encodeLockCfValue(
-                    Region::DelFlag, "primary key", 5678, std::numeric_limits<UInt64>::max(), nullptr, 66666));
+                     RecordKVFormat::encodeLockCfValue(
+                         Region::DelFlag,
+                         "primary key",
+                         5678,
+                         std::numeric_limits<UInt64>::max(),
+                         nullptr,
+                         66666));
             ASSERT_TRUE(d.getSize() == 2);
             ASSERT_TRUE(
                 std::get<2>(d.getData().find(RegionLockCFDataTrait::Key{nullptr, std::string_view(k2.data(), k2.dataSize())})->second)
@@ -116,8 +131,8 @@ TEST(TiKVKeyValue_test, PortedTests)
         ASSERT_TRUE(d.getSize() == 1);
 
         ASSERT_TRUE(d.insert(RecordKVFormat::genKey(1, 2, 3),
-                        RecordKVFormat::encodeWriteCfValue(RecordKVFormat::UselessCFModifyFlag::LockFlag, 4, "value"))
-            == 0);
+                             RecordKVFormat::encodeWriteCfValue(RecordKVFormat::UselessCFModifyFlag::LockFlag, 4, "value"))
+                    == 0);
         ASSERT_TRUE(d.getSize() == 1);
 
         auto pk = RecordKVFormat::getRawTiDBPK(RecordKVFormat::genRawKey(1, 2));
@@ -147,7 +162,6 @@ TEST(TiKVKeyValue_test, PortedTests)
     }
 
     {
-
         UInt64 a = 13241432453554;
         Crc32 crc32;
         crc32.put(&a, sizeof(a));
@@ -351,7 +365,7 @@ TEST(TiKVKeyValue_test, PortedTests)
 
     {
         const Int64 tableId = 2333;
-        const Timestamp ts = 66666;
+        const TiDBTimestamp ts = 66666;
         std::string key(RecordKVFormat::RAW_KEY_NO_HANDLE_SIZE, 0);
         memcpy(key.data(), &RecordKVFormat::TABLE_PREFIX, 1);
         auto big_endian_table_id = RecordKVFormat::encodeInt64(tableId);
@@ -411,7 +425,6 @@ CATCH
 
 namespace
 {
-
 // In python, we can convert a test case from `s`
 // 'range = parseTestCase({{{}}});\nASSERT_EQ(range, expected_range);'.format(','.join(map(lambda x: '{{{}}}'.format(','.join(map(lambda y: '0x{:02x}'.format(int(y, 16)), x.strip('[').strip(']').split()))), s.split(','))))
 

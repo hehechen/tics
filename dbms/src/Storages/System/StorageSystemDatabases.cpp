@@ -14,9 +14,8 @@
 
 namespace DB
 {
-
-
-StorageSystemDatabases::StorageSystemDatabases(const std::string & name_) : name(name_)
+StorageSystemDatabases::StorageSystemDatabases(const std::string & name_)
+    : name(name_)
 {
     setColumns(ColumnsDescription({
         {"name", std::make_shared<DataTypeString>()},
@@ -31,11 +30,11 @@ StorageSystemDatabases::StorageSystemDatabases(const std::string & name_) : name
 
 
 BlockInputStreams StorageSystemDatabases::read(const Names & column_names,
-    const SelectQueryInfo &,
-    const Context & context,
-    QueryProcessingStage::Enum & processed_stage,
-    const size_t /*max_block_size*/,
-    const unsigned /*num_streams*/)
+                                               const SelectQueryInfo &,
+                                               const Context & context,
+                                               QueryProcessingStage::Enum & processed_stage,
+                                               const size_t /*max_block_size*/,
+                                               const unsigned /*num_streams*/)
 {
     check(column_names);
     processed_stage = QueryProcessingStage::FetchColumns;
@@ -52,7 +51,7 @@ BlockInputStreams StorageSystemDatabases::read(const Names & column_names,
 
         String tidb_db_name;
         DatabaseID database_id = -1;
-        Timestamp tombstone = 0;
+        TiDBTimestamp tombstone = 0;
         if (const DatabaseTiFlash * db_tiflash = typeid_cast<DatabaseTiFlash *>(database.second.get()); db_tiflash)
         {
             auto & db_info = db_tiflash->getDatabaseInfo();

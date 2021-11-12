@@ -18,7 +18,9 @@ extern const int DEADLOCK_AVOIDED;
 } // namespace ErrorCodes
 
 SchemaSyncService::SchemaSyncService(DB::Context & context_)
-    : context(context_), background_pool(context_.getBackgroundPool()), log(&Poco::Logger::get("SchemaSyncService"))
+    : context(context_)
+    , background_pool(context_.getBackgroundPool())
+    , log(&Poco::Logger::get("SchemaSyncService"))
 {
     handle = background_pool.addTask(
         [&, this] {
@@ -44,8 +46,8 @@ SchemaSyncService::SchemaSyncService(DB::Context & context_)
             catch (const Exception & e)
             {
                 LOG_ERROR(log,
-                    __PRETTY_FUNCTION__ << ": " << stage << " failed by " << e.displayText()
-                                        << " \n stack : " << e.getStackTrace().toString());
+                          __PRETTY_FUNCTION__ << ": " << stage << " failed by " << e.displayText()
+                                              << " \n stack : " << e.getStackTrace().toString());
             }
             catch (const Poco::Exception & e)
             {
@@ -60,17 +62,23 @@ SchemaSyncService::SchemaSyncService(DB::Context & context_)
         false);
 }
 
-SchemaSyncService::~SchemaSyncService() { background_pool.removeTask(handle); }
+SchemaSyncService::~SchemaSyncService()
+{
+    background_pool.removeTask(handle);
+}
 
-bool SchemaSyncService::syncSchemas() { return context.getTMTContext().getSchemaSyncer()->syncSchemas(context); }
+bool SchemaSyncService::syncSchemas()
+{
+    return context.getTMTContext().getSchemaSyncer()->syncSchemas(context);
+}
 
 template <typename DatabaseOrTablePtr>
-inline bool isSafeForGC(const DatabaseOrTablePtr & ptr, Timestamp gc_safe_point)
+inline bool isSafeForGC(const DatabaseOrTablePtr & ptr, TiDBTimestamp gc_safe_point)
 {
     return ptr->isTombstone() && ptr->getTombstone() < gc_safe_point;
 }
 
-bool SchemaSyncService::gc(Timestamp gc_safe_point)
+bool SchemaSyncService::gc(TiDBTimestamp gc_safe_point)
 {
     auto & tmt_context = context.getTMTContext();
     if (gc_safe_point == gc_context.last_gc_safe_point)

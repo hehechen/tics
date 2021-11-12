@@ -64,7 +64,7 @@ void registerStorageDeltaMerge(StorageFactory & factory)
         // Note: if `table_info_json` is not empty, `table_info` store a ref to `info`
         std::optional<std::reference_wrapper<const TiDB::TableInfo>> table_info = std::nullopt;
 
-        Timestamp tombstone = 0;
+        TiDBTimestamp tombstone = 0;
 
         if (args.engine_args.size() >= 2)
         {

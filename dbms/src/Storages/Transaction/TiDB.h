@@ -35,7 +35,7 @@ using DB::DatabaseID;
 using DB::Exception;
 using DB::String;
 using DB::TableID;
-using DB::Timestamp;
+using DB::TiDBTimestamp;
 
 // Column types.
 // In format:
@@ -340,7 +340,7 @@ struct TableInfo
     /// when is_common_handle = true, it means this table is a clustered index table
     bool is_common_handle = false;
     String comment;
-    Timestamp update_timestamp = 0;
+    TiDBTimestamp update_timestamp = 0;
     bool is_partition_table = false;
     TableID belonging_table_id = DB::InvalidTableID;
     PartitionInfo partition;

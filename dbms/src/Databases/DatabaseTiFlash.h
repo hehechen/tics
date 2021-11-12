@@ -11,7 +11,6 @@ using DBInfoPtr = std::shared_ptr<DBInfo>;
 
 namespace DB
 {
-
 class DatabaseTiFlash : public DatabaseWithOwnTablesBase
 {
 public:
@@ -19,8 +18,7 @@ public:
     static constexpr Version CURRENT_VERSION = 1;
 
 public:
-    DatabaseTiFlash(String name_, const String & metadata_path_, const TiDB::DBInfo & db_info_, Version version_, Timestamp tombstone_,
-        const Context & context);
+    DatabaseTiFlash(String name_, const String & metadata_path_, const TiDB::DBInfo & db_info_, Version version_, TiDBTimestamp tombstone_, const Context & context);
 
     String getEngineName() const override { return "TiFlash"; }
 
@@ -33,15 +31,17 @@ public:
 
     // Rename action synced from TiDB should use this method.
     // We need display database / table name for updating TiDB::TableInfo
-    void renameTable(const Context & context, const String & table_name, IDatabase & to_database, const String & to_table_name,
-        const String & display_database, const String & display_table);
+    void renameTable(const Context & context, const String & table_name, IDatabase & to_database, const String & to_table_name, const String & display_database, const String & display_table);
 
     // This method should never called.
     void renameTable(const Context & context, const String & table_name, IDatabase & to_database, const String & to_table_name) override;
 
 
     void alterTable(
-        const Context & context, const String & name, const ColumnsDescription & columns, const ASTModifier & engine_modifier) override;
+        const Context & context,
+        const String & name,
+        const ColumnsDescription & columns,
+        const ASTModifier & engine_modifier) override;
 
     time_t getTableMetadataModificationTime(const Context & context, const String & table_name) override;
 
@@ -58,8 +58,8 @@ public:
     void shutdown() override;
 
     bool isTombstone() const override { return tombstone != 0; }
-    Timestamp getTombstone() const override { return tombstone; }
-    void alterTombstone(const Context & context, Timestamp tombstone_) override;
+    TiDBTimestamp getTombstone() const override { return tombstone; }
+    void alterTombstone(const Context & context, TiDBTimestamp tombstone_) override;
 
     void drop(const Context & context) override;
 
@@ -72,7 +72,7 @@ private:
 
     /// Timestamp when this database is dropped.
     /// Zero means this database is not dropped.
-    Timestamp tombstone;
+    TiDBTimestamp tombstone;
 
     Poco::Logger * log;
 

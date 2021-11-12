@@ -152,7 +152,7 @@ public:
                                                   RegionVersion region_version,
                                                   RegionVersion conf_version,
                                                   bool resolve_locks,
-                                                  Timestamp start_ts,
+                                                  TiDBTimestamp start_ts,
                                                   const std::unordered_set<UInt64> * bypass_lock_ts,
                                                   RegionScanFilterPtr scan_filter = nullptr);
 
@@ -162,7 +162,7 @@ public:
     static ResolveLocksAndWriteRegionRes resolveLocksAndWriteRegion(TMTContext & tmt,
                                                                     const TiDB::TableID table_id,
                                                                     const RegionPtr & region,
-                                                                    const Timestamp start_ts,
+                                                                    const TiDBTimestamp start_ts,
                                                                     const std::unordered_set<UInt64> * bypass_lock_ts,
                                                                     RegionVersion region_version,
                                                                     RegionVersion conf_version,

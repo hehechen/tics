@@ -6,7 +6,6 @@
 
 namespace DB
 {
-
 /// Operation from the ALTER query (except for manipulation with PART/PARTITION). Adding Nested columns is not expanded to add individual columns.
 struct AlterCommand
 {
@@ -48,7 +47,7 @@ struct AlterCommand
     ASTPtr primary_key;
 
     /// For TOMBSTONE - timestamp when this table is dropped.
-    Timestamp tombstone;
+    TiDBTimestamp tombstone;
 
     /// the names are the same if they match the whole name or name_without_dot matches the part of the name up to the dot
     static bool namesEqual(const String & name_without_dot, const DB::NameAndTypePair & name_type)
@@ -59,16 +58,18 @@ struct AlterCommand
 
     /// For MODIFY_COLUMN
     /// find column from `columns` or throw exception
-    NamesAndTypesList::Iterator findColumn(NamesAndTypesList &columns) const;
+    NamesAndTypesList::Iterator findColumn(NamesAndTypesList & columns) const;
 
     void apply(ColumnsDescription & columns_description) const;
 
     AlterCommand() = default;
-    AlterCommand(const Type type, const String & column_name, const DataTypePtr & data_type,
-                 const ColumnDefaultKind default_kind, const ASTPtr & default_expression,
-                 const String & after_column = String{})
-        : type{type}, column_name{column_name}, data_type{data_type}, default_kind{default_kind},
-        default_expression{default_expression}, after_column{after_column}
+    AlterCommand(const Type type, const String & column_name, const DataTypePtr & data_type, const ColumnDefaultKind default_kind, const ASTPtr & default_expression, const String & after_column = String{})
+        : type{type}
+        , column_name{column_name}
+        , data_type{data_type}
+        , default_kind{default_kind}
+        , default_expression{default_expression}
+        , after_column{after_column}
     {}
 };
 
@@ -83,4 +84,4 @@ public:
     void validate(IStorage * table, const Context & context);
 };
 
-}
+} // namespace DB

@@ -19,14 +19,14 @@ using KVClusterPtr = std::shared_ptr<pingcap::kv::Cluster>;
 
 namespace DB
 {
-
 struct PDClientHelper
 {
-
     static constexpr int get_safepoint_maxtime = 120000; // 120s. waiting pd recover.
 
-    static Timestamp getGCSafePointWithRetry(
-        const pingcap::pd::ClientPtr & pd_client, bool ignore_cache = true, Int64 safe_point_update_interval_seconds = 30)
+    static TiDBTimestamp getGCSafePointWithRetry(
+        const pingcap::pd::ClientPtr & pd_client,
+        bool ignore_cache = true,
+        Int64 safe_point_update_interval_seconds = 30)
     {
         if (!ignore_cache)
         {
@@ -56,7 +56,7 @@ struct PDClientHelper
     }
 
 private:
-    static Timestamp cached_gc_safe_point;
+    static TiDBTimestamp cached_gc_safe_point;
     static std::chrono::time_point<std::chrono::system_clock> safe_point_last_update_time;
 };
 

@@ -1436,7 +1436,7 @@ namespace GC
 {
 // Returns true if it needs gc.
 // This is for optimization purpose, does not mean to be accurate.
-bool shouldCompactStable(const SegmentPtr & seg, DB::Timestamp gc_safepoint, double ratio_threshold, Poco::Logger * log)
+bool shouldCompactStable(const SegmentPtr & seg, DB::TiDBTimestamp gc_safepoint, double ratio_threshold, Poco::Logger * log)
 {
     // Always GC.
     if (ratio_threshold < 1.0)
@@ -1494,7 +1494,7 @@ UInt64 DeltaMergeStore::onSyncGc(Int64 limit)
         }
     }
 
-    DB::Timestamp gc_safe_point = latest_gc_safe_point.load(std::memory_order_acquire);
+    DB::TiDBTimestamp gc_safe_point = latest_gc_safe_point.load(std::memory_order_acquire);
     LOG_DEBUG(log,
               "GC on table " << table_name << " start with key: " << next_gc_check_key.toDebugString() << ", gc_safe_point: " << gc_safe_point);
 

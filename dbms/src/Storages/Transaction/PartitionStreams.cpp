@@ -172,7 +172,7 @@ static void writeRegionDataToStorage(
 std::variant<RegionDataReadInfoList, RegionException::RegionReadStatus, LockInfoPtr> resolveLocksAndReadRegionData(
     const TiDB::TableID table_id,
     const RegionPtr & region,
-    const Timestamp start_ts,
+    const TiDBTimestamp start_ts,
     const std::unordered_set<UInt64> * bypass_lock_ts,
     RegionVersion region_version,
     RegionVersion conf_version,
@@ -346,7 +346,7 @@ RegionTable::ReadBlockByRegionRes RegionTable::readBlockByRegion(const TiDB::Tab
                                                                  RegionVersion region_version,
                                                                  RegionVersion conf_version,
                                                                  bool resolve_locks,
-                                                                 Timestamp start_ts,
+                                                                 TiDBTimestamp start_ts,
                                                                  const std::unordered_set<UInt64> * bypass_lock_ts,
                                                                  RegionScanFilterPtr scan_filter)
 {
@@ -395,7 +395,7 @@ RegionTable::ReadBlockByRegionRes RegionTable::readBlockByRegion(const TiDB::Tab
 RegionTable::ResolveLocksAndWriteRegionRes RegionTable::resolveLocksAndWriteRegion(TMTContext & tmt,
                                                                                    const TiDB::TableID table_id,
                                                                                    const RegionPtr & region,
-                                                                                   const Timestamp start_ts,
+                                                                                   const TiDBTimestamp start_ts,
                                                                                    const std::unordered_set<UInt64> * bypass_lock_ts,
                                                                                    RegionVersion region_version,
                                                                                    RegionVersion conf_version,
@@ -429,7 +429,7 @@ RegionPtrWithBlock::CachePtr GenRegionPreDecodeBlockData(const RegionPtr & regio
 {
     const auto & tmt = context.getTMTContext();
     {
-        Timestamp gc_safe_point = 0;
+        TiDBTimestamp gc_safe_point = 0;
         if (auto pd_client = tmt.getPDClient(); !pd_client->isMock())
         {
             gc_safe_point
@@ -609,7 +609,7 @@ static Block sortColumnsBySchemaSnap(Block && ori, const DM::ColumnDefines & sch
 /// The columns of returned block is sorted by `schema_snap`.
 Block GenRegionBlockDataWithSchema(const RegionPtr & region, //
                                    const DecodingStorageSchemaSnapshot & schema_snap,
-                                   Timestamp gc_safepoint,
+                                   TiDBTimestamp gc_safepoint,
                                    bool force_decode,
                                    TMTContext & tmt)
 {

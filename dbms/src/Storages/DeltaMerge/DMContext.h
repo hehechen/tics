@@ -29,7 +29,7 @@ struct DMContext : private boost::noncopyable
     const UInt64 hash_salt;
 
     // gc safe-point, maybe update.
-    DB::Timestamp min_version;
+    DB::TiDBTimestamp min_version;
 
     const NotCompress & not_compress; // Not used currently.
 
@@ -73,7 +73,7 @@ public:
               StoragePathPool & path_pool_,
               StoragePool & storage_pool_,
               const UInt64 hash_salt_,
-              const DB::Timestamp min_version_,
+              const DB::TiDBTimestamp min_version_,
               const NotCompress & not_compress_,
               bool is_common_handle_,
               size_t rowkey_column_size_,

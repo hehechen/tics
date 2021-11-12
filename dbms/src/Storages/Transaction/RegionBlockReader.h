@@ -11,7 +11,6 @@ struct TableInfo;
 
 namespace DB
 {
-
 class IManageableStorage;
 using ManageableStoragePtr = std::shared_ptr<IManageableStorage>;
 
@@ -49,8 +48,12 @@ class RegionScanFilter
 
 public:
     RegionScanFilter(
-        bool is_full_range_scan_, std::vector<HandleRange<Int64>> int64_ranges_, std::vector<HandleRange<UInt64>> uint64_ranges_)
-        : is_full_range_scan(is_full_range_scan_), int64_ranges(std::move(int64_ranges_)), uint64_ranges(std::move(uint64_ranges_))
+        bool is_full_range_scan_,
+        std::vector<HandleRange<Int64>> int64_ranges_,
+        std::vector<HandleRange<UInt64>> uint64_ranges_)
+        : is_full_range_scan(is_full_range_scan_)
+        , int64_ranges(std::move(int64_ranges_))
+        , uint64_ranges(std::move(uint64_ranges_))
     {}
     bool filter(UInt64 handle) { return !is_full_range_scan && !isValidHandle(handle); }
     bool filter(Int64 handle) { return !is_full_range_scan && !isValidHandle(handle); }
@@ -69,7 +72,7 @@ class RegionBlockReader : private boost::noncopyable
     const ColumnsDescription & columns;
 
     RegionScanFilterPtr scan_filter;
-    Timestamp start_ts = std::numeric_limits<Timestamp>::max();
+    TiDBTimestamp start_ts = std::numeric_limits<TiDBTimestamp>::max();
 
     // Whether to reorder the rows when pk is uint64.
     // For Delta-Tree, we don't need to reorder rows to be sorted by uint64 pk
@@ -92,7 +95,7 @@ public:
     /// Data with commit_ts > start_ts will be ignored. This is for the sake of decode safety on read,
     /// i.e. as data keeps being synced to region cache while the schema for a specific read is fixed,
     /// we'll always have newer data than schema, only ignoring them can guarantee the decode safety.
-    inline RegionBlockReader & setStartTs(Timestamp tso)
+    inline RegionBlockReader & setStartTs(TiDBTimestamp tso)
     {
         start_ts = tso;
         return *this;

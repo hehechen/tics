@@ -663,7 +663,7 @@ static StoragePtr create(const StorageFactory::Arguments & args)
     ASTPtr primary_expr_list;
     ASTPtr sampling_expression;
     TiDB::TableInfo table_info;
-    Timestamp tombstone = 0;
+    TiDBTimestamp tombstone = 0;
     MergeTreeSettings storage_settings = args.context.getMergeTreeSettings();
 
     if (is_extended_storage_def)

@@ -10,7 +10,6 @@
 
 namespace DB
 {
-
 namespace ErrorCodes
 {
 extern const int UNKNOWN_TABLE;
@@ -56,11 +55,11 @@ void dbgFuncRefreshSchemas(Context & context, const ASTs &, DBGInvoker::Printer 
 void dbgFuncGcSchemas(Context & context, const ASTs & args, DBGInvoker::Printer output)
 {
     auto & service = context.getSchemaSyncService();
-    Timestamp gc_safe_point = 0;
+    TiDBTimestamp gc_safe_point = 0;
     if (args.size() == 0)
         gc_safe_point = PDClientHelper::getGCSafePointWithRetry(context.getTMTContext().getPDClient());
     else
-        gc_safe_point = safeGet<Timestamp>(typeid_cast<const ASTLiteral &>(*args[0]).value);
+        gc_safe_point = safeGet<TiDBTimestamp>(typeid_cast<const ASTLiteral &>(*args[0]).value);
     service->gc(gc_safe_point);
 
     std::stringstream ss;
@@ -97,7 +96,6 @@ void dbgFuncIsTombstone(Context & context, const ASTs & args, DBGInvoker::Printe
     }
     else if (args.size() == 2)
     {
-
         const String & table_name = typeid_cast<const ASTIdentifier &>(*args[1]).name;
         auto storage = context.getTable(database_name, table_name);
         auto managed_storage = std::dynamic_pointer_cast<IManageableStorage>(storage);
