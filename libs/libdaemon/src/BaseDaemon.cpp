@@ -29,6 +29,7 @@
 #include <IO/ReadHelpers.h>
 #include <IO/WriteBufferFromFileDescriptor.h>
 #include <IO/WriteHelpers.h>
+#include <Poco/AsyncChannel.h>
 #include <Poco/AutoPtr.h>
 #include <Poco/Condition.h>
 #include <Poco/ConsoleChannel.h>
@@ -758,7 +759,10 @@ void BaseDaemon::buildLoggers(Poco::Util::AbstractConfiguration & config)
         log_file->setProperty(Poco::FileChannel::PROP_PURGECOUNT, config.getRawString("logger.count", "10"));
         log_file->setProperty(Poco::FileChannel::PROP_FLUSH, config.getRawString("logger.flush", "true"));
         log_file->setProperty(Poco::FileChannel::PROP_ROTATEONOPEN, config.getRawString("logger.rotateOnOpen", "false"));
-        log->setChannel(log_file);
+        // If modify log config and create new tables at the same time frequently, may be too many async threads, but users will not have this scenario.
+        Poco::AutoPtr<Poco::AsyncChannel> async_channel = new Poco::AsyncChannel(log_file);
+        async_channel->setProperty("queueSize", "10240");
+        log->setChannel(async_channel);
         split->addChannel(log);
         log_file->open();
     }
@@ -782,7 +786,9 @@ void BaseDaemon::buildLoggers(Poco::Util::AbstractConfiguration & config)
         error_log_file->setProperty(Poco::FileChannel::PROP_PURGECOUNT, config.getRawString("logger.count", "10"));
         error_log_file->setProperty(Poco::FileChannel::PROP_FLUSH, config.getRawString("logger.flush", "true"));
         error_log_file->setProperty(Poco::FileChannel::PROP_ROTATEONOPEN, config.getRawString("logger.rotateOnOpen", "false"));
-        errorlog->setChannel(error_log_file);
+        Poco::AutoPtr<Poco::AsyncChannel> async_channel = new Poco::AsyncChannel(error_log_file);
+        async_channel->setProperty("queueSize", "10240");
+        errorlog->setChannel(async_channel);
         level->setChannel(errorlog);
         split->addChannel(level);
         errorlog->open();
@@ -842,6 +848,7 @@ void BaseDaemon::buildLoggers(Poco::Util::AbstractConfiguration & config)
 
     // Attach to the root logger.
     Logger::root().setLevel(log_level);
+    // May be stuck here when root logger logging in other threads, but no problem in TiFlash. https://github.com/pocoproject/poco/issues/1039
     Logger::root().setChannel(logger().getChannel());
 
     // Explicitly specified log levels for specific loggers.
