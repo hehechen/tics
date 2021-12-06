@@ -571,7 +571,8 @@ StableValueSpacePtr Segment::prepareMergeDelta(DMContext & dm_context,
     LOG_INFO(log,
              "Segment [" << DB::toString(segment_id)
                          << "] prepare merge delta start. delta packs: " << DB::toString(segment_snap->delta->getPackCount())
-                         << ", delta total rows: " << DB::toString(segment_snap->delta->getRows()));
+                         << ", delta total rows: " << DB::toString(segment_snap->delta->getRows())
+                         << ", delta total size: " << DB::toString(segment_snap->delta->getBytes()));
 
     EventRecorder recorder(ProfileEvents::DMDeltaMerge, ProfileEvents::DMDeltaMergeNS);
 
@@ -1274,8 +1275,9 @@ String Segment::info() const
 {
     std::stringstream s;
     s << "{[id:" << segment_id << "], [next:" << next_segment_id << "], [epoch:" << epoch << "], [range:" << rowkey_range.toDebugString()
-      << "], [rowkey_range:" << rowkey_range.toDebugString() << "], [delta rows:" << delta->getRows()
-      << "], [delete ranges:" << delta->getDeletes() << "], [stable(" << stable->getDMFilesString() << "):" << stable->getRows() << "]}";
+      << "], [rowkey_range:" << rowkey_range.toDebugString() << "], [delta rows:" << delta->getRows() << "], [delta bytes:" << delta->getBytes()
+      << "], [delete ranges:" << delta->getDeletes() << "], [stable(" << stable->getDMFilesString() << "):"
+      << "rows:" << stable->getRows() << ", bytes:" << stable->getBytes() << "]}";
     return s.str();
 }
 
