@@ -44,7 +44,7 @@ private:
     {
         size_t min_part_size = 0;
         double min_part_size_ratio = 0;
-        CompressionSettings settings = CompressionSettings(CompressionMethod::LZ4);
+        CompressionSettings settings = CompressionSettings(CompressionMethod::ZSTD);
 
         static CompressionMethod compressionMethodFromString(const std::string & name)
         {
