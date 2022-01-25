@@ -73,7 +73,7 @@ void CompressedWriteBuffer<add_checksum>::nextImpl()
             compressed_buffer.size() - header_size,
             working_buffer.begin(),
             uncompressed_size,
-            compression_settings.level);
+            -1);
 
         if (ZSTD_isError(res))
             throw Exception("Cannot compress block with ZSTD: " + std::string(ZSTD_getErrorName(res)), ErrorCodes::CANNOT_COMPRESS);
