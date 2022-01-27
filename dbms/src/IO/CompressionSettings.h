@@ -13,7 +13,7 @@ struct CompressionSettings
     int level;
 
     CompressionSettings()
-        : CompressionSettings(CompressionMethod::LZ4)
+        : CompressionSettings(CompressionMethod::LZ4HC)
     {
     }
 

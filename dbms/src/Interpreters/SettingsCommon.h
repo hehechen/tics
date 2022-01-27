@@ -820,7 +820,7 @@ struct SettingCompressionMethod
 public:
     bool changed = false;
 
-    SettingCompressionMethod(CompressionMethod x = CompressionMethod::LZ4)
+    SettingCompressionMethod(CompressionMethod x = CompressionMethod::LZ4HC)
         : value(x)
     {}
 

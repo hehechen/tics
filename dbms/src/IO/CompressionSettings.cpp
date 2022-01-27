@@ -25,7 +25,7 @@ int CompressionSettings::getDefaultLevel(CompressionMethod method)
     case CompressionMethod::LZ4:
         return -1;
     case CompressionMethod::LZ4HC:
-        return 0;
+        return 3;
     case CompressionMethod::ZSTD:
         return 1;
     default:

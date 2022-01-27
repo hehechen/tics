@@ -104,7 +104,7 @@ BlockPtr deserializeSchema(ReadBuffer & buf)
 
 void serializeColumn(MemoryWriteBuffer & buf, const IColumn & column, const DataTypePtr & type, size_t offset, size_t limit, bool compress)
 {
-    CompressionMethod method = compress ? CompressionMethod::LZ4 : CompressionMethod::NONE;
+    CompressionMethod method = compress ? CompressionMethod::LZ4HC : CompressionMethod::NONE;
 
     CompressedWriteBuffer compressed(buf, CompressionSettings(method));
     type->serializeBinaryBulkWithMultipleStreams(column, //

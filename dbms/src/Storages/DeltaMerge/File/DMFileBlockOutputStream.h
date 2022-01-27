@@ -24,7 +24,7 @@ public:
                             const DMFilePtr & dmfile,
                             const ColumnDefines & write_columns,
                             const Flags flags = Flags(),
-                            const CompressionSettings compression_settings = CompressionMethod::LZ4)
+                            const CompressionSettings compression_settings = CompressionMethod::LZ4HC)
         : writer(
             dmfile,
             write_columns,
