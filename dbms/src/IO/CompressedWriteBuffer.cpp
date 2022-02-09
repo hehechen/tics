@@ -68,10 +68,11 @@ void CompressedWriteBuffer<add_checksum>::nextImpl()
 
         compressed_buffer[0] = static_cast<UInt8>(CompressionMethodByte::ZSTD);
 
-        size_t res = ZSTD_compress(
-            &compressed_buffer[header_size],
-            compressed_buffer.size() - header_size,
-            working_buffer.begin(),
+        size_t res = ZSTD_compressCCtx(
+            zstd_cctx, 
+            &compressed_buffer[header_size], 
+            compressed_buffer.size() - header_size, 
+            working_buffer.begin(), 
             uncompressed_size,
             -1);
 
@@ -129,6 +130,7 @@ CompressedWriteBuffer<add_checksum>::CompressedWriteBuffer(
     : BufferWithOwnMemory<WriteBuffer>(buf_size)
     , out(out_)
     , compression_settings(compression_settings_)
+    , zstd_cctx(ZSTD_createCCtx())
 {
 }
 
@@ -143,6 +145,7 @@ CompressedWriteBuffer<add_checksum>::~CompressedWriteBuffer()
     {
         tryLogCurrentException(__PRETTY_FUNCTION__);
     }
+    ZSTD_freeCCtx(zstd_cctx);
 }
 
 template class CompressedWriteBuffer<true>;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Common/PODArray.h>
-
+#include <zstd.h>
 
 namespace DB
 {
@@ -23,7 +23,7 @@ protected:
 
     /// Don't checksum on decompressing.
     bool disable_checksum[has_checksum]{};
-
+    ZSTD_DCtx * zstd_dctx;
 
     /// Read compressed data into compressed_buffer. Get size of decompressed data from block header. Checksum if need.
     /// Returns number of compressed bytes read.
