@@ -6,7 +6,7 @@
 #include <IO/WriteBuffer.h>
 
 #include <memory>
-
+#include <zstd.h>
 
 namespace DB
 {
@@ -18,6 +18,7 @@ private:
     CompressionSettings compression_settings;
 
     PODArray<char> compressed_buffer;
+    ZSTD_CCtx * zstd_cctx;
 
     void nextImpl() override;
 

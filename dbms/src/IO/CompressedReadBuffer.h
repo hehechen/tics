@@ -4,7 +4,6 @@
 #include <IO/CompressedReadBufferBase.h>
 #include <IO/ReadBuffer.h>
 
-
 namespace DB
 {
 template <bool has_checksum = true>
@@ -13,7 +12,6 @@ class CompressedReadBuffer : public CompressedReadBufferBase<has_checksum>
 {
 private:
     size_t size_compressed = 0;
-
     bool nextImpl() override;
 
 public:

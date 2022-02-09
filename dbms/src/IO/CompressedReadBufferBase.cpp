@@ -113,8 +113,8 @@ void CompressedReadBufferBase<has_checksum>::decompress(char * to, size_t size_d
     }
     else if (method == static_cast<UInt8>(CompressionMethodByte::ZSTD))
     {
-        size_t res = ZSTD_decompress(to, size_decompressed, compressed_buffer + COMPRESSED_BLOCK_HEADER_SIZE, size_compressed_without_checksum - COMPRESSED_BLOCK_HEADER_SIZE);
-
+        size_t res = ZSTD_decompressDCtx(zstd_dctx, to, size_decompressed, compressed_buffer + COMPRESSED_BLOCK_HEADER_SIZE, size_compressed_without_checksum - COMPRESSED_BLOCK_HEADER_SIZE);
+  
         if (ZSTD_isError(res))
             throw Exception("Cannot ZSTD_decompress: " + std::string(ZSTD_getErrorName(res)), ErrorCodes::CANNOT_DECOMPRESS);
     }
@@ -132,11 +132,14 @@ template <bool has_checksum>
 CompressedReadBufferBase<has_checksum>::CompressedReadBufferBase(ReadBuffer * in)
     : compressed_in(in)
     , own_compressed_buffer(COMPRESSED_BLOCK_HEADER_SIZE)
+    , zstd_dctx(ZSTD_createDCtx())
 {}
 
 template <bool has_checksum>
 CompressedReadBufferBase<has_checksum>::~CompressedReadBufferBase()
-    = default; /// Proper destruction of unique_ptr of forward-declared type.
+{
+    ZSTD_freeDCtx(zstd_dctx);
+}
 
 
 template class CompressedReadBufferBase<true>;
