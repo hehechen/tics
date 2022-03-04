@@ -22,6 +22,7 @@
 #include <IO/WriteBufferFromOStream.h>
 #include <Storages/DeltaMerge/DMChecksumConfig.h>
 #include <Storages/DeltaMerge/File/DMFile.h>
+#include <Storages/DeltaMerge/Index/CMapIndex.h>
 #include <Storages/DeltaMerge/Index/MinMaxIndex.h>
 
 namespace DB
@@ -145,6 +146,9 @@ public:
 
         using ColumnMinMaxIndexs = std::unordered_map<String, MinMaxIndexPtr>;
         ColumnMinMaxIndexs minmax_indexs;
+
+        using ColumnCMapIndexs = std::unordered_map<String, CMapIndexPtr>;
+        ColumnCMapIndexs CMapIndexes;
 
         using ColumnDataSizes = std::unordered_map<String, size_t>;
         ColumnDataSizes column_data_sizes;
