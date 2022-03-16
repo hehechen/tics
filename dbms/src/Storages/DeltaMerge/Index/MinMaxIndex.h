@@ -22,6 +22,7 @@
 #include <DataTypes/DataTypeString.h>
 #include <DataTypes/DataTypesNumber.h>
 #include <DataTypes/IDataType.h>
+#include <Storages/DeltaMerge/Index/RSIndex.h>
 #include <Storages/DeltaMerge/Index/RSResult.h>
 
 namespace DB
@@ -31,7 +32,7 @@ namespace DM
 class MinMaxIndex;
 using MinMaxIndexPtr = std::shared_ptr<MinMaxIndex>;
 
-class MinMaxIndex
+class MinMaxIndex : public RSIndex
 {
 private:
     using HasValueMarkPtr = std::shared_ptr<PaddedPODArray<UInt8>>;
@@ -50,23 +51,25 @@ private:
     }
 
 public:
+    inline constexpr static const char * INDEX_FILE_SUFFIX = ".idx";
     explicit MinMaxIndex(const IDataType & type)
         : has_null_marks(std::make_shared<PaddedPODArray<UInt8>>())
         , has_value_marks(std::make_shared<PaddedPODArray<UInt8>>())
         , minmaxes(type.createColumn())
     {
     }
+    ~MinMaxIndex() {}
 
     size_t byteSize() const
     {
         return sizeof(UInt8) * has_null_marks->size() + sizeof(UInt8) * has_value_marks->size() + minmaxes->byteSize();
     }
 
-    void addPack(const IColumn & column, const ColumnVector<UInt8> * del_mark);
+    void addPack(const IDataType & data_type, const IColumn & column, const ColumnVector<UInt8> * del_mark);
 
     void write(const IDataType & type, WriteBuffer & buf);
 
-    static MinMaxIndexPtr read(const IDataType & type, ReadBuffer & buf, size_t bytes_limit);
+    static MinMaxIndexPtr read(const IDataType & type, ReadBuffer & buf, size_t bytes_limit, bool check_bytes_limit = true);
 
     std::pair<Int64, Int64> getIntMinMax(size_t pack_index);
 
@@ -79,8 +82,40 @@ public:
     RSResult checkEqual(size_t pack_index, const Field & value, const DataTypePtr & type);
     RSResult checkGreater(size_t pack_index, const Field & value, const DataTypePtr & type, int nan_direction);
     RSResult checkGreaterEqual(size_t pack_index, const Field & value, const DataTypePtr & type, int nan_direction);
-
+    String getIndexFileName(const String & file_name_base)
+    {
+        return file_name_base + INDEX_FILE_SUFFIX;
+    }
+    String getIndexNameSuffix()
+    {
+        return INDEX_FILE_SUFFIX;
+    }
     String toString() const;
+
+    HasNullMarkPtr getNullMark()
+    {
+        return has_null_marks;
+    }
+    HasValueMarkPtr getValueMark()
+    {
+        return has_value_marks;
+    }
+    MutableColumnPtr & getMinMaxes()
+    {
+        return minmaxes;
+    }
+
+    Int64 getMinMaxValueAt(const IDataType & dataType, size_t index)
+    {
+        if (dataType.isNullable())
+        {
+            const ColumnNullable & column = static_cast<const ColumnNullable &>(*minmaxes);
+            return column.getNestedColumn().getInt(index);
+        }
+        return minmaxes->getInt(index);
+    }
+    RSResult checkNullableGreater(size_t pack_index, const Field & value, const DataTypePtr & type);
+    RSResult checkNullableGreaterEqual(size_t pack_index, const Field & value, const DataTypePtr & type);
 };
 
 

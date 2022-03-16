@@ -52,9 +52,9 @@ public:
     {
         GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex);
         // TODO optimize for IN
-        RSResult res = rsindex.minmax->checkEqual(pack_id, values[0], rsindex.type);
+        RSResult res = rsindex->checkEqual(pack_id, values[0], rsindex->getType());
         for (size_t i = 1; i < values.size(); ++i)
-            res = res || rsindex.minmax->checkEqual(pack_id, values[i], rsindex.type);
+            res = res || rsindex->checkEqual(pack_id, values[i], rsindex->getType());
         return res;
     }
 };

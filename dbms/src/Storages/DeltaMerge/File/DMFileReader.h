@@ -86,7 +86,7 @@ public:
         const ColumnCachePtr & column_cache_,
         size_t aio_threshold,
         size_t max_read_buffer_size,
-        const FileProviderPtr & file_provider_,
+        const FileProviderPtr & file_pgetMinMaxIndexCacherovider_,
         const ReadLimiterPtr & read_limiter,
         size_t rows_threshold_per_read_,
         bool read_one_pack_every_time_,

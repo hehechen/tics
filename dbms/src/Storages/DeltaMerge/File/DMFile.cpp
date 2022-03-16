@@ -53,6 +53,8 @@ inline constexpr static const char * FOLDER_PREFIX_READABLE = "dmf_";
 inline constexpr static const char * FOLDER_PREFIX_DROPPED = ".del.dmf_";
 inline constexpr static const char * DATA_FILE_SUFFIX = ".dat";
 inline constexpr static const char * INDEX_FILE_SUFFIX = ".idx";
+inline constexpr static const char * CMAP_INDEX_FILE_SUFFIX = ".cmap_idx";
+inline constexpr static const char * HISTOGRAM_INDEX_FILE_SUFFIX = ".histogram_idx";
 inline constexpr static const char * MARK_FILE_SUFFIX = ".mrk";
 
 inline String getNGCPath(const String & prefix, bool is_single_mode)
@@ -170,7 +172,7 @@ DMFilePtr DMFile::restore(
     return dmfile;
 }
 
-String DMFile::colIndexCacheKey(const FileNameBase & file_name_base) const
+String DMFile::colIndexCacheKey(const FileNameBase & file_name_base, const String & exist_index_file_suffix) const
 {
     if (isSingleFileMode())
     {
@@ -178,7 +180,7 @@ String DMFile::colIndexCacheKey(const FileNameBase & file_name_base) const
     }
     else
     {
-        return colIndexPath(file_name_base);
+        return colIndexPath(file_name_base, exist_index_file_suffix);
     }
 }
 
@@ -218,9 +220,9 @@ EncryptionPath DMFile::encryptionDataPath(const FileNameBase & file_name_base) c
     return EncryptionPath(encryptionBasePath(), isSingleFileMode() ? "" : file_name_base + details::DATA_FILE_SUFFIX);
 }
 
-EncryptionPath DMFile::encryptionIndexPath(const FileNameBase & file_name_base) const
+EncryptionPath DMFile::encryptionIndexPath(const FileNameBase & file_name_base, const String & index_name_suffix) const
 {
-    return EncryptionPath(encryptionBasePath(), isSingleFileMode() ? "" : file_name_base + details::INDEX_FILE_SUFFIX);
+    return EncryptionPath(encryptionBasePath(), isSingleFileMode() ? "" : file_name_base + index_name_suffix);
 }
 
 EncryptionPath DMFile::encryptionMarkPath(const FileNameBase & file_name_base) const
@@ -398,9 +400,12 @@ void DMFile::upgradeMetaIfNeed(const FileProviderPtr & file_provider, DMFileForm
                     String mark_file = colDataPath(stream_name);
                     if (Poco::File f(mark_file); f.exists())
                         stat.serialized_bytes += f.getSize();
-                    String index_file = colIndexPath(stream_name);
-                    if (Poco::File f(index_file); f.exists())
-                        stat.serialized_bytes += f.getSize();
+                    std::vector<String> index_files = colIndexesPaths(stream_name);
+                    for (auto & index_file : index_files)
+                    {
+                        if (Poco::File f(index_file); f.exists())
+                            stat.serialized_bytes += f.getSize();
+                    }
                 },
                 {});
         }
@@ -817,7 +822,7 @@ void DMFile::initializeSubFileStatsForFolderMode()
     directory.list(sub_files);
     for (const auto & name : sub_files)
     {
-        if (endsWith(name, details::DATA_FILE_SUFFIX) || endsWith(name, details::INDEX_FILE_SUFFIX)
+        if (endsWith(name, details::DATA_FILE_SUFFIX) || endsWith(name, details::INDEX_FILE_SUFFIX) || endsWith(name, details::CMAP_INDEX_FILE_SUFFIX) || endsWith(name, details::HISTOGRAM_INDEX_FILE_SUFFIX)
             || endsWith(name, details::MARK_FILE_SUFFIX))
         {
             auto size = Poco::File(path() + "/" + name).getSize();
@@ -855,7 +860,23 @@ void DMFile::initializeIndices()
         {
             column_indices.insert(decode(removeSuffix(name, strlen(details::INDEX_FILE_SUFFIX)))); // strip tailing `.idx`
         }
+        else if (endsWith(name, details::CMAP_INDEX_FILE_SUFFIX))
+        {
+            column_indices.insert(decode(removeSuffix(name, strlen(details::CMAP_INDEX_FILE_SUFFIX)))); // strip tailing `.idx`
+        }
+        else if (endsWith(name, details::HISTOGRAM_INDEX_FILE_SUFFIX))
+        {
+            column_indices.insert(decode(removeSuffix(name, strlen(details::HISTOGRAM_INDEX_FILE_SUFFIX)))); // strip tailing `.idx`
+        }
     }
+}
+std::vector<String> DMFile::colIndexesPaths(const DMFile::FileNameBase & file_name_base) const
+{
+    std::vector<String> paths;
+    paths.push_back(subFilePath(file_name_base + details::CMAP_INDEX_FILE_SUFFIX));
+    paths.push_back(subFilePath(file_name_base + details::INDEX_FILE_SUFFIX));
+    paths.push_back(subFilePath(file_name_base + details::HISTOGRAM_INDEX_FILE_SUFFIX));
+    return paths;
 }
 
 } // namespace DM

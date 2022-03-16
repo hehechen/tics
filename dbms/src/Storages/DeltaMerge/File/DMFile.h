@@ -221,6 +221,7 @@ public:
 
     String path() const;
 
+    String subFilePath(const String & file_name) const { return isSingleFileMode() ? path() : path() + "/" + file_name; }
     const String & parentPath() const { return parent_path; }
 
     size_t getRows() const
@@ -316,15 +317,16 @@ private:
 
     using FileNameBase = String;
     String colDataPath(const FileNameBase & file_name_base) const { return subFilePath(colDataFileName(file_name_base)); }
-    String colIndexPath(const FileNameBase & file_name_base) const { return subFilePath(colIndexFileName(file_name_base)); }
+    String colIndexPath(const FileNameBase & file_name_base, const String & index_name_suffix) const { return subFilePath(file_name_base + index_name_suffix); }
+    std::vector<String> colIndexesPaths(const FileNameBase & file_name_base) const;
     String colMarkPath(const FileNameBase & file_name_base) const { return subFilePath(colMarkFileName(file_name_base)); }
 
-    String colIndexCacheKey(const FileNameBase & file_name_base) const;
+    String colIndexCacheKey(const FileNameBase & file_name_base, const String & exist_index_file_suffix) const;
     String colMarkCacheKey(const FileNameBase & file_name_base) const;
 
     size_t colIndexOffset(const FileNameBase & file_name_base) const { return subFileOffset(colIndexFileName(file_name_base)); }
     size_t colMarkOffset(const FileNameBase & file_name_base) const { return subFileOffset(colMarkFileName(file_name_base)); }
-    size_t colIndexSize(const FileNameBase & file_name_base) const { return subFileSize(colIndexFileName(file_name_base)); }
+    size_t colIndexSize(const FileNameBase & file_name_base, const String & index_name_suffix) const { return subFileSize(file_name_base + index_name_suffix); }
     size_t colMarkSize(const FileNameBase & file_name_base) const { return subFileSize(colMarkFileName(file_name_base)); }
     size_t colDataSize(const FileNameBase & file_name_base) const { return subFileSize(colDataFileName(file_name_base)); }
 
@@ -332,7 +334,7 @@ private:
 
     String encryptionBasePath() const;
     EncryptionPath encryptionDataPath(const FileNameBase & file_name_base) const;
-    EncryptionPath encryptionIndexPath(const FileNameBase & file_name_base) const;
+    EncryptionPath encryptionIndexPath(const FileNameBase & file_name_base, const String & index_name_suffix) const;
     EncryptionPath encryptionMarkPath(const FileNameBase & file_name_base) const;
     EncryptionPath encryptionMetaPath() const;
     EncryptionPath encryptionPackStatPath() const;
@@ -384,7 +386,6 @@ private:
 
     bool isSubFileExists(const String & name) const { return sub_file_stats.find(name) != sub_file_stats.end(); }
 
-    String subFilePath(const String & file_name) const { return isSingleFileMode() ? path() : path() + "/" + file_name; }
 
     size_t subFileOffset(const String & file_name) const { return isSingleFileMode() ? sub_file_stats.at(file_name).offset : 0; }
 

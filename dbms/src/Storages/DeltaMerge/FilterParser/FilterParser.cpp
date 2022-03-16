@@ -55,22 +55,23 @@ inline bool isRoughSetFilterSupportType(const Int32 field_type)
     case TiDB::TypeDatetime:
     case TiDB::TypeTimestamp: // For timestamp, should take time_zone into consideration while parsing `literal`
         return true;
-    // For these types, should take collation into consideration. Disable them.
+    case TiDB::TypeFloat:
+    case TiDB::TypeDouble:
+    case TiDB::TypeNull:
     case TiDB::TypeVarchar:
+    case TiDB::TypeVarString:
+    case TiDB::TypeString:
+        return true;
+        // For these types, should take collation into consideration. Disable them.
     case TiDB::TypeJSON:
     case TiDB::TypeTinyBlob:
     case TiDB::TypeMediumBlob:
     case TiDB::TypeLongBlob:
     case TiDB::TypeBlob:
-    case TiDB::TypeVarString:
-    case TiDB::TypeString:
         return false;
     // Unknown.
     case TiDB::TypeDecimal:
     case TiDB::TypeNewDecimal:
-    case TiDB::TypeFloat:
-    case TiDB::TypeDouble:
-    case TiDB::TypeNull:
     case TiDB::TypeBit:
     case TiDB::TypeEnum:
     case TiDB::TypeSet:

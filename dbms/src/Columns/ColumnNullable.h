@@ -124,6 +124,8 @@ public:
 
     const ColumnPtr & getNestedColumnPtr() const { return nested_column; }
 
+    Int64 getInt(size_t n) const override { return getNestedColumn().getInt(n); }
+
     /// Return the column that represents the byte map.
     //ColumnPtr & getNullMapColumnPtr() { return null_map; }
     const ColumnPtr & getNullMapColumnPtr() const { return null_map; }

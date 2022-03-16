@@ -24,6 +24,7 @@
 #include <Storages/DeltaMerge/File/DMFile.h>
 #include <Storages/DeltaMerge/Index/CMapIndex.h>
 #include <Storages/DeltaMerge/Index/MinMaxIndex.h>
+#include <Storages/DeltaMerge/Index/RSIndexManager.h>
 
 namespace DB
 {
@@ -54,7 +55,9 @@ public:
                size_t max_compress_block_size,
                FileProviderPtr & file_provider,
                const WriteLimiterPtr & write_limiter_,
-               bool do_index)
+               bool do_index,
+               bool is_extra_column,
+               bool is_version_column)
             : plain_file(
                 WriteBufferByFileProviderBuilder(
                     dmfile->configuration.has_value(),
@@ -70,7 +73,7 @@ public:
             , compressed_buf(dmfile->configuration
                                  ? std::unique_ptr<WriteBuffer>(new CompressedWriteBuffer<false>(*plain_file, compression_settings))
                                  : std::unique_ptr<WriteBuffer>(new CompressedWriteBuffer<true>(*plain_file, compression_settings)))
-            , minmaxes(do_index ? std::make_shared<MinMaxIndex>(*type) : nullptr)
+                                 , rsindexes(do_index ? std::make_shared<RSIndexManager>(type, is_extra_column, is_version_column) : nullptr)
             , mark_file(WriteBufferByFileProviderBuilder(
                             dmfile->configuration.has_value(),
                             file_provider,
@@ -104,6 +107,7 @@ public:
         WriteBufferPtr compressed_buf;
 
         MinMaxIndexPtr minmaxes;
+        RSIndexManagerPtr rsindexes;
         WriteBufferFromFileBasePtr mark_file;
     };
     using StreamPtr = std::unique_ptr<Stream>;

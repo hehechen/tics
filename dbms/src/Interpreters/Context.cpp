@@ -52,6 +52,7 @@
 #include <Storages/BackgroundProcessingPool.h>
 #include <Storages/DeltaMerge/DeltaIndexManager.h>
 #include <Storages/DeltaMerge/Index/MinMaxIndex.h>
+#include <Storages/DeltaMerge/Index/RSIndexManager.h>
 #include <Storages/DeltaMerge/StoragePool.h>
 #include <Storages/IStorage.h>
 #include <Storages/MarkCache.h>
@@ -145,6 +146,7 @@ struct ContextShared
     mutable DBGInvoker dbg_invoker; /// Execute inner functions, debug only.
     mutable MarkCachePtr mark_cache; /// Cache of marks in compressed files.
     mutable DM::MinMaxIndexCachePtr minmax_index_cache; /// Cache of minmax index in compressed files.
+    mutable DM::RSIndexCachePtr rs_index_cache; /// Cache of rough set index in compressed files.
     mutable DM::DeltaIndexManagerPtr delta_index_manager; /// Manage the Delta Indies of Segments.
     ProcessList process_list; /// Executing queries at the moment.
     ViewDependencies view_dependencies; /// Current dependencies
@@ -1419,6 +1421,12 @@ DM::MinMaxIndexCachePtr Context::getMinMaxIndexCache() const
 {
     auto lock = getLock();
     return shared->minmax_index_cache;
+}
+
+DM::RSIndexCachePtr Context::getRSIndexCache() const
+{
+    auto lock = getLock();
+    return shared->rs_index_cache;
 }
 
 void Context::dropMinMaxIndexCache() const

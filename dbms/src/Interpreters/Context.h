@@ -20,6 +20,7 @@
 #include <Interpreters/ClientInfo.h>
 #include <Interpreters/Settings.h>
 #include <Interpreters/TimezoneInfo.h>
+#include <Storages/DeltaMerge/Index/RSIndexManager.h>
 #include <common/MultiVersion.h>
 
 #include <chrono>
@@ -367,6 +368,8 @@ public:
     void setMinMaxIndexCache(size_t cache_size_in_bytes);
     std::shared_ptr<DM::MinMaxIndexCache> getMinMaxIndexCache() const;
     void dropMinMaxIndexCache() const;
+
+    std::shared_ptr<DM::RSIndexCache> getRSIndexCache() const;
 
     bool isDeltaIndexLimited() const;
     void setDeltaIndexManager(size_t cache_size_in_bytes);
