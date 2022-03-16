@@ -32,7 +32,7 @@ public:
     RSResult roughCheck(size_t pack_id, const RSCheckParam & param) override
     {
         GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex);
-        return !rsindex.minmax->checkEqual(pack_id, value, rsindex.type);
+        return !rsindex->checkEqual(pack_id, value, rsindex->getType());
     }
 };
 

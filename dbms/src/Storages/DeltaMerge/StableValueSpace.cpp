@@ -48,7 +48,7 @@ void StableValueSpace::setFiles(const DMFiles & files_, const RowKeyRange & rang
     }
     else
     {
-        auto index_cache = dm_context->db_context.getGlobalContext().getMinMaxIndexCache();
+        auto index_cache = dm_context->db_context.getGlobalContext().getRSIndexCache();
         for (const auto & file : files_)
         {
             auto pack_filter = DMFilePackFilter::loadFrom(
@@ -237,7 +237,7 @@ void StableValueSpace::calculateStableProperty(const DMContext & context, const 
         }
         auto pack_filter = DMFilePackFilter::loadFrom(
             file,
-            context.db_context.getGlobalContext().getMinMaxIndexCache(),
+            context.db_context.getGlobalContext().getRSIndexCache(),
             /*set_cache_if_miss*/ false,
             {rowkey_range},
             EMPTY_FILTER,
@@ -363,7 +363,7 @@ RowsAndBytes StableValueSpace::Snapshot::getApproxRowsAndBytes(const DMContext &
     {
         auto filter = DMFilePackFilter::loadFrom(
             f,
-            context.db_context.getGlobalContext().getMinMaxIndexCache(),
+            context.db_context.getGlobalContext().getRSIndexCache(),
             /*set_cache_if_miss*/ false,
             {range},
             RSOperatorPtr{},

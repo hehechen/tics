@@ -17,6 +17,7 @@
 #include <Common/FieldVisitors.h>
 #include <Storages/DeltaMerge/DeltaMergeDefines.h>
 #include <Storages/DeltaMerge/Index/RSIndex.h>
+#include <Storages/DeltaMerge/Index/RSIndexManager.h>
 #include <Storages/DeltaMerge/Index/RSResult.h>
 
 namespace DB
@@ -27,6 +28,8 @@ class RSOperator;
 using RSOperatorPtr = std::shared_ptr<RSOperator>;
 using RSOperators = std::vector<RSOperatorPtr>;
 using Fields = std::vector<Field>;
+
+using ColumnIndexes = std::unordered_map<ColId, RSIndexManagerPtr>;
 
 inline static const RSOperatorPtr EMPTY_FILTER{};
 
@@ -116,12 +119,12 @@ public:
     }
 };
 
-#define GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex)                                                                                                                                       \
-    auto it = param.indexes.find(attr.col_id);                                                                                                                                                                   \
-    if (it == param.indexes.end())                                                                                                                                                                               \
-        return Some;                                                                                                                                                                                             \
-    auto rsindex = it->second;                                                                                                                                                                                   \
-    if ((rsindex.type->getTypeId() != TypeIndex::Nullable && !rsindex.type->equals(*attr.type)) || (rsindex.type->getTypeId() == TypeIndex::Nullable && !rsindex.type->getNestedDataType()->equals(*attr.type))) \
+#define GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex)                                                                                                     \
+    auto it = param.indexes.find(attr.col_id);                                                                                                                                 \
+    if (it == param.indexes.end())                                                                                                                                             \
+        return Some;                                                                                                                                                           \
+    auto rsindex = it->second;                                                                                                                                                 \
+    if ((!rsindex->getType()->equals(*attr.type)) && (rsindex->getType()->getTypeId() == TypeIndex::Nullable && !rsindex->getType()->getNestedDataType()->equals(*attr.type))) \
         return Some;
 
 

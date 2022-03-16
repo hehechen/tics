@@ -214,14 +214,6 @@ try
     ASSERT_EQ(true, checkMatch(case_name, *context, "MyDateTime", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
     ASSERT_EQ(false, checkMatch(case_name, *context, "MyDateTime", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-26"), 0)));
 
-    /// Currently we don't do filtering for null values. i.e. if a pack contains any null values, then the pack will pass the filter.
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Nullable(Int64)"), Field((Int64)101))));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createIn(attr("Nullable(Int64)"), {Field((Int64)101)})));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreater(attr("Nullable(Int64)"), Field((Int64)100), 0)));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreaterEqual(attr("Nullable(Int64)"), Field((Int64)101), 0)));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLess(attr("Nullable(Int64)"), Field((Int64)100), 0)));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLessEqual(attr("Nullable(Int64)"), Field((Int64)99), 0)));
-
     ASSERT_EQ(false, checkDelMatch(case_name, *context, "Int64", "100", createEqual(attr("Int64"), Field((Int64)100))));
     ASSERT_EQ(true, checkPkMatch(case_name, *context, "Int64", "100", createEqual(pkAttr(), Field((Int64)100)), true));
     ASSERT_EQ(true, checkPkMatch(case_name, *context, "Int64", "100", createGreater(pkAttr(), Field((Int64)99), 0), true));
@@ -232,7 +224,153 @@ try
     ASSERT_EQ(true, checkMatch(case_name, *context, "String", "test_not_like_filter", createNotLike(attr("String"), Field(Field((String) "*test_like_filter")))));
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createNotIn(attr("Int64"), {Field((Int64)101), Field((Int64)102), Field((Int64)103)})));
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createIn(attr("Int64"), {Field((Int64)100), Field((Int64)101), Field((Int64)102)})));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "String", "hehe", createEqual(attr("String"), Field((String)"hehe"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "String", "hoho", createEqual(attr("String"), Field((String)"hehe"))));
     // clang-format on
+}
+CATCH
+
+TEST_F(DMMinMaxIndexTest, NullableToNullable)
+try
+{
+    const auto * case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    // clang-format off
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createEqual(attr("Nullable(Int64)"), Field((Int64)100))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createEqual(attr("Nullable(Int64)"), Field((Int64)101))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createIn(attr("Nullable(Int64)"), {Field((Int64)100)})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createIn(attr("Nullable(Int64)"), {Field((Int64)101)})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreater(attr("Nullable(Int64)"), Field((Int64)99), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreater(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreaterEqual(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreaterEqual(attr("Nullable(Int64)"), Field((Int64)101), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLess(attr("Nullable(Int64)"), Field((Int64)101), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLess(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLessEqual(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLessEqual(attr("Nullable(Int64)"), Field((Int64)99), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createEqual(attr("Nullable(Date)"), Field((String) "2020-09-27"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createEqual(attr("Nullable(Date)"), Field((String) "2020-09-28"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createIn(attr("Nullable(Date)"), {Field((String) "2020-09-27")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createIn(attr("Nullable(Date)"), {Field((String) "2020-09-28")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreater(attr("Nullable(Date)"), Field((String) "2020-09-26"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreater(attr("Nullable(Date)"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreaterEqual(attr("Nullable(Date)"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreaterEqual(attr("Nullable(Date)"), Field((String) "2020-09-28"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLess(attr("Nullable(Date)"), Field((String) "2020-09-28"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLess(attr("Nullable(Date)"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLessEqual(attr("Nullable(Date)"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLessEqual(attr("Nullable(Date)"), Field((String) "2020-09-26"), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:02"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createIn(attr("DateTime"), {Field((String) "2020-01-01 05:00:01")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createIn(attr("DateTime"), {Field((String) "2020-01-01 05:00:02")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreater(attr("DateTime"), Field((String) "2020-01-01 05:00:00"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreater(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreaterEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreaterEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:02"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLess(attr("DateTime"), Field((String) "2020-01-01 05:00:02"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLess(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLessEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLessEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:00"), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createEqual(attr("MyDateTime"), parseMyDateTime("2020-09-28"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createIn(attr("MyDateTime"), {parseMyDateTime("2020-09-27")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createIn(attr("MyDateTime"), {parseMyDateTime("2020-09-28")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreater(attr("MyDateTime"), parseMyDateTime("2020-09-26"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreater(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreaterEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreaterEqual(attr("MyDateTime"), parseMyDateTime("2020-09-28"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLess(attr("MyDateTime"), parseMyDateTime("2020-09-28"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLess(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-26"), 0)));
+
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Nullable(Int64)"), Field((Int64)101))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createIn(attr("Nullable(Int64)"), {Field((Int64)101)})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreater(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreaterEqual(attr("Nullable(Int64)"), Field((Int64)101), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLess(attr("Nullable(Int64)"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLessEqual(attr("Nullable(Int64)"), Field((Int64)99), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "hehe"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Nullable(String)"), Field((String)("hehe")))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("Nullable(String)"), Field((String)("hehe")))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("Nullable(String)"), Field((String)("hoho")))));
+
+
+}
+CATCH
+
+TEST_F(DMMinMaxIndexTest, NullableToValue)
+try
+{
+    const auto * case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    // clang-format off
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createEqual(attr("Int64"), Field((Int64)100))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createEqual(attr("Int64"), Field((Int64)101))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createIn(attr("Int64"), {Field((Int64)100)})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createIn(attr("Int64"), {Field((Int64)101)})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreater(attr("Int64"), Field((Int64)99), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreater(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreaterEqual(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createGreaterEqual(attr("Int64"), Field((Int64)101), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLess(attr("Int64"), Field((Int64)101), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLess(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLessEqual(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", "100", createLessEqual(attr("Int64"), Field((Int64)99), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createEqual(attr("Date"), Field((String) "2020-09-27"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createEqual(attr("Date"), Field((String) "2020-09-28"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createIn(attr("Date"), {Field((String) "2020-09-27")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createIn(attr("Date"), {Field((String) "2020-09-28")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreater(attr("Date"), Field((String) "2020-09-26"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreater(attr("Date"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreaterEqual(attr("Date"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createGreaterEqual(attr("Date"), Field((String) "2020-09-28"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLess(attr("Date"), Field((String) "2020-09-28"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLess(attr("Date"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLessEqual(attr("Date"), Field((String) "2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Date)", "2020-09-27", createLessEqual(attr("Date"), Field((String) "2020-09-26"), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:02"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createIn(attr("DateTime"), {Field((String) "2020-01-01 05:00:01")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createIn(attr("DateTime"), {Field((String) "2020-01-01 05:00:02")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreater(attr("DateTime"), Field((String) "2020-01-01 05:00:00"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreater(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreaterEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createGreaterEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:02"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLess(attr("DateTime"), Field((String) "2020-01-01 05:00:02"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLess(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLessEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:01"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(DateTime)", "2020-01-01 05:00:01", createLessEqual(attr("DateTime"), Field((String) "2020-01-01 05:00:00"), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createEqual(attr("MyDateTime"), parseMyDateTime("2020-09-28"))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createIn(attr("MyDateTime"), {parseMyDateTime("2020-09-27")})));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createIn(attr("MyDateTime"), {parseMyDateTime("2020-09-28")})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreater(attr("MyDateTime"), parseMyDateTime("2020-09-26"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreater(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreaterEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createGreaterEqual(attr("MyDateTime"), parseMyDateTime("2020-09-28"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLess(attr("MyDateTime"), parseMyDateTime("2020-09-28"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLess(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-27"), 0)));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(MyDateTime)", "2020-09-27", createLessEqual(attr("MyDateTime"), parseMyDateTime("2020-09-26"), 0)));
+
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Int64"), Field((Int64)101))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createIn(attr("Int64"), {Field((Int64)101)})));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreater(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createGreaterEqual(attr("Int64"), Field((Int64)101), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLess(attr("Int64"), Field((Int64)100), 0)));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(Int64)", {{"0", "0", "0", "100"}, {"1", "1", "0", "\\N"}}, createLessEqual(attr("Int64"), Field((Int64)99), 0)));
+
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "hehe"}, {"1", "1", "0", "\\N"}}, createEqual(attr("String"), Field((String)("hehe")))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("String"), Field((String)("hehe")))));
+    ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("String"), Field((String)("hoho")))));
+
 }
 CATCH
 
@@ -322,6 +460,8 @@ try
     ASSERT_EQ(RoughCheck::Cmp<LessOrEqualsOp>::compare(Field((String) "test_2"), enum16_type, (Int16)101), ValueCompareResult::True);
 }
 CATCH
+
+
 } // namespace tests
 } // namespace DM
 } // namespace DB

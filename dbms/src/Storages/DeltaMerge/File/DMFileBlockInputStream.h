@@ -127,7 +127,7 @@ private:
         max_read_buffer_size = settings.max_read_buffer_size;
         return *this;
     }
-    DMFileBlockInputStreamBuilder & setCaches(const MarkCachePtr & mark_cache_, const MinMaxIndexCachePtr & index_cache_)
+    DMFileBlockInputStreamBuilder & setCaches(const MarkCachePtr & mark_cache_, const RSIndexCachePtr & index_cache_)
     {
         mark_cache = mark_cache_;
         index_cache = index_cache_;
@@ -145,7 +145,7 @@ private:
     // packs filter (filter by pack index)
     IdSetPtr read_packs;
     MarkCachePtr mark_cache;
-    MinMaxIndexCachePtr index_cache;
+    RSIndexCachePtr index_cache;
     // column cache
     bool enable_column_cache = false;
     ColumnCachePtr column_cache;

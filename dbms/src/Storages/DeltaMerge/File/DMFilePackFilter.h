@@ -43,7 +43,7 @@ class DMFilePackFilter
 public:
     static DMFilePackFilter loadFrom(
         const DMFilePtr & dmfile,
-        const MinMaxIndexCachePtr & index_cache,
+        const RSIndexCachePtr & index_cache,
         bool set_cache_if_miss,
         const RowKeyRanges & rowkey_ranges,
         const RSOperatorPtr & filter,
@@ -64,24 +64,21 @@ public:
     {
         if (!param.indexes.count(EXTRA_HANDLE_COLUMN_ID))
             tryLoadIndex(EXTRA_HANDLE_COLUMN_ID);
-        auto & minmax_index = param.indexes.find(EXTRA_HANDLE_COLUMN_ID)->second.minmax;
-        return minmax_index->getIntMinMax(pack_id).first;
+        return param.indexes.find(EXTRA_HANDLE_COLUMN_ID)->second->getIntMinMax(pack_id).first;
     }
 
     StringRef getMinStringHandle(size_t pack_id)
     {
         if (!param.indexes.count(EXTRA_HANDLE_COLUMN_ID))
             tryLoadIndex(EXTRA_HANDLE_COLUMN_ID);
-        auto & minmax_index = param.indexes.find(EXTRA_HANDLE_COLUMN_ID)->second.minmax;
-        return minmax_index->getStringMinMax(pack_id).first;
+        return param.indexes.find(EXTRA_HANDLE_COLUMN_ID)->second->getStringMinMax(pack_id).first;
     }
 
     UInt64 getMaxVersion(size_t pack_id)
     {
         if (!param.indexes.count(VERSION_COLUMN_ID))
             tryLoadIndex(VERSION_COLUMN_ID);
-        auto & minmax_index = param.indexes.find(VERSION_COLUMN_ID)->second.minmax;
-        return minmax_index->getUInt64MinMax(pack_id).second;
+        return param.indexes.find(VERSION_COLUMN_ID)->second->getUInt64MinMax(pack_id).second;
     }
 
     // Get valid rows and bytes after filter invalid packs by handle_range and filter
@@ -103,7 +100,7 @@ public:
 
 private:
     DMFilePackFilter(const DMFilePtr & dmfile_,
-                     const MinMaxIndexCachePtr & index_cache_,
+                     const RSIndexCachePtr & index_cache_,
                      bool set_cache_if_miss_,
                      const RowKeyRanges & rowkey_ranges_, // filter by handle range
                      const RSOperatorPtr & filter_, // filter by push down where clause
@@ -217,38 +214,35 @@ private:
                       pack_count);
     }
 
-    static void loadIndex(ColumnIndexes & indexes,
-                          const DMFilePtr & dmfile,
-                          const FileProviderPtr & file_provider,
-                          const MinMaxIndexCachePtr & index_cache,
-                          bool set_cache_if_miss,
-                          ColId col_id,
-                          const ReadLimiterPtr & read_limiter)
+    void loadIndex(ColumnIndexes & indexes,
+                   ColId col_id)
     {
         const auto & type = dmfile->getColumnStat(col_id).type;
         const auto file_name_base = DMFile::getFileNameBase(col_id);
 
+        String exist_index_file_suffix = RSIndexManager::getExistIndexFile(dmfile->path() + "/" + file_name_base);
         auto load = [&]() {
-            auto index_file_size = dmfile->colIndexSize(file_name_base);
+            auto index_file_size = dmfile->colIndexSize(file_name_base, exist_index_file_suffix);
             if (index_file_size == 0)
-                return std::make_shared<MinMaxIndex>(*type);
+                return std::make_shared<RSIndexManager>(type, col_id == EXTRA_HANDLE_COLUMN_ID, col_id == VERSION_COLUMN_ID);
             if (!dmfile->configuration)
             {
                 auto index_buf = ReadBufferFromFileProvider(
                     file_provider,
-                    dmfile->colIndexPath(file_name_base),
-                    dmfile->encryptionIndexPath(file_name_base),
+                    dmfile->colIndexPath(file_name_base, exist_index_file_suffix),
+                    dmfile->encryptionIndexPath(file_name_base, exist_index_file_suffix),
                     std::min(static_cast<size_t>(DBMS_DEFAULT_BUFFER_SIZE), index_file_size),
                     read_limiter);
                 index_buf.seek(dmfile->colIndexOffset(file_name_base));
-                return MinMaxIndex::read(*type, index_buf, dmfile->colIndexSize(file_name_base));
+
+                return RSIndexManager::read(type, index_buf, dmfile->colIndexSize(file_name_base, exist_index_file_suffix), exist_index_file_suffix);
             }
             else
             {
                 auto index_buf = createReadBufferFromFileBaseByFileProvider(file_provider,
-                                                                            dmfile->colIndexPath(file_name_base),
-                                                                            dmfile->encryptionIndexPath(file_name_base),
-                                                                            dmfile->colIndexSize(file_name_base),
+                                                                            dmfile->colIndexPath(file_name_base, exist_index_file_suffix),
+                                                                            dmfile->encryptionIndexPath(file_name_base, exist_index_file_suffix),
+                                                                            dmfile->colIndexSize(file_name_base, exist_index_file_suffix),
                                                                             read_limiter,
                                                                             dmfile->configuration->getChecksumAlgorithm(),
                                                                             dmfile->configuration->getChecksumFrameLength());
@@ -256,23 +250,23 @@ private:
                 auto header_size = dmfile->configuration->getChecksumHeaderLength();
                 auto frame_total_size = dmfile->configuration->getChecksumFrameLength() + header_size;
                 auto frame_count = index_file_size / frame_total_size + (index_file_size % frame_total_size != 0);
-                return MinMaxIndex::read(*type, *index_buf, index_file_size - header_size * frame_count);
+                return RSIndexManager::read(type, *index_buf, index_file_size - header_size * frame_count, exist_index_file_suffix);
             }
         };
-        MinMaxIndexPtr minmax_index;
+        RSIndexManagerPtr rsindex;
         if (index_cache && set_cache_if_miss)
         {
-            minmax_index = index_cache->getOrSet(dmfile->colIndexCacheKey(file_name_base), load);
+            rsindex = index_cache->getOrSet(dmfile->colIndexCacheKey(file_name_base, exist_index_file_suffix), load);
         }
         else
         {
             // try load from the cache first
             if (index_cache)
-                minmax_index = index_cache->get(dmfile->colIndexCacheKey(file_name_base));
-            if (!minmax_index)
-                minmax_index = load();
+                rsindex = index_cache->get(dmfile->colIndexCacheKey(file_name_base, exist_index_file_suffix));
+            if (!rsindex)
+                rsindex = load();
         }
-        indexes.emplace(col_id, RSIndex(type, minmax_index));
+        indexes.emplace(col_id, rsindex);
     }
 
     void tryLoadIndex(const ColId col_id)
@@ -283,12 +277,12 @@ private:
         if (!dmfile->isColIndexExist(col_id))
             return;
 
-        loadIndex(param.indexes, dmfile, file_provider, index_cache, set_cache_if_miss, col_id, read_limiter);
+        loadIndex(param.indexes, col_id);
     }
 
 private:
     DMFilePtr dmfile;
-    MinMaxIndexCachePtr index_cache;
+    RSIndexCachePtr index_cache;
     bool set_cache_if_miss;
     RowKeyRanges rowkey_ranges;
     RSOperatorPtr filter;

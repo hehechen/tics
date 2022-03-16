@@ -74,9 +74,8 @@ DMFileWriter::DMFileWriter(const DMFilePtr & dmfile_,
         // TODO: currently we only generate index for Integers, Date, DateTime types, and this should be configurable by user.
         // TODO: If column type is nullable, we won't generate index for it
         /// for handle column always generate index
-        bool do_index = cd.id == EXTRA_HANDLE_COLUMN_ID || cd.type->isInteger() || cd.type->isDateOrDateTime();
-
-        if (cd.type->isNullable() && (cd.type->getNestedDataType()->isInteger() || (cd.type->getNestedDataType()->isDateOrDateTime())))
+        bool do_index = cd.id == EXTRA_HANDLE_COLUMN_ID || RSIndexManager::supportedType(cd.type);
+        if (cd.type->isNullable() && RSIndexManager::supportedType(cd.type->getNestedDataType()))
         {
             do_index = true;
         }
@@ -115,7 +114,9 @@ void DMFileWriter::addStreams(ColId col_id, DataTypePtr type, bool do_index)
             options.max_compress_block_size,
             file_provider,
             write_limiter,
-            IDataType::isNullMap(substream_path) ? false : do_index);
+            IDataType::isNullMap(substream_path) ? false : do_index,
+            col_id == EXTRA_HANDLE_COLUMN_ID,
+            col_id == VERSION_COLUMN_ID);
         column_streams.emplace(stream_name, std::move(stream));
     };
 
@@ -199,7 +200,7 @@ void DMFileWriter::writeColumn(ColId col_id, const IDataType & type, const IColu
             {
                 // For EXTRA_HANDLE_COLUMN_ID, we ignore del_mark when add minmax index.
                 // Because we need all rows which satisfy a certain range when place delta index no matter whether the row is a delete row.
-                iter->second->addPack(column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
+                iter->second->addPack(type, column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
             }
 
             auto offset_in_compressed_block = single_file_stream->original_layer.offset();
@@ -264,7 +265,7 @@ void DMFileWriter::writeColumn(ColId col_id, const IDataType & type, const IColu
                 {
                     // For EXTRA_HANDLE_COLUMN_ID, we ignore del_mark when add minmax index.
                     // Because we need all rows which satisfy a certain range when place delta index no matter whether the row is a delete row.
-                    stream->minmaxes->addPack(column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
+                    stream->minmaxes->addPack(type, column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
                 }
 
                 /// There could already be enough data to compress into the new block.
@@ -360,17 +361,18 @@ void DMFileWriter::finalizeColumn(ColId col_id, DataTypePtr type)
 #endif
             bytes_written += stream->getWrittenBytes();
 
-            if (stream->minmaxes)
+            if (stream->rsindexes)
             {
+                String index_file_suffix = stream->rsindexes->getIndexNameSuffix();
                 if (!dmfile->configuration)
                 {
                     WriteBufferFromFileProvider buf(
                         file_provider,
-                        dmfile->colIndexPath(stream_name),
-                        dmfile->encryptionIndexPath(stream_name),
+                        dmfile->colIndexPath(stream_name, index_file_suffix),
+                        dmfile->encryptionIndexPath(stream_name, index_file_suffix),
                         false,
                         write_limiter);
-                    stream->minmaxes->write(*type, buf);
+                    stream->rsindexes->write(*type, buf);
                     buf.sync();
                     // Ignore data written in index file when the dmfile is empty.
                     // This is ok because the index file in this case is tiny, and we already ignore other small files like meta and pack stat file.
@@ -381,13 +383,13 @@ void DMFileWriter::finalizeColumn(ColId col_id, DataTypePtr type)
                 else
                 {
                     auto buf = createWriteBufferFromFileBaseByFileProvider(file_provider,
-                                                                           dmfile->colIndexPath(stream_name),
-                                                                           dmfile->encryptionIndexPath(stream_name),
+                                                                           dmfile->colIndexPath(stream_name, index_file_suffix),
+                                                                           dmfile->encryptionIndexPath(stream_name, index_file_suffix),
                                                                            false,
                                                                            write_limiter,
                                                                            dmfile->configuration->getChecksumAlgorithm(),
                                                                            dmfile->configuration->getChecksumFrameLength());
-                    stream->minmaxes->write(*type, *buf);
+                    stream->rsindexes->write(*type, *buf);
                     buf->sync();
                     // Ignore data written in index file when the dmfile is empty.
                     // This is ok because the index file in this case is tiny, and we already ignore other small files like meta and pack stat file.
