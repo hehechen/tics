@@ -116,12 +116,12 @@ public:
     }
 };
 
-#define GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex) \
-    auto it = param.indexes.find(attr.col_id);                             \
-    if (it == param.indexes.end())                                         \
-        return Some;                                                       \
-    auto rsindex = it->second;                                             \
-    if (!rsindex.type->equals(*attr.type))                                 \
+#define GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex)                                                                                                                                       \
+    auto it = param.indexes.find(attr.col_id);                                                                                                                                                                   \
+    if (it == param.indexes.end())                                                                                                                                                                               \
+        return Some;                                                                                                                                                                                             \
+    auto rsindex = it->second;                                                                                                                                                                                   \
+    if ((rsindex.type->getTypeId() != TypeIndex::Nullable && !rsindex.type->equals(*attr.type)) || (rsindex.type->getTypeId() == TypeIndex::Nullable && !rsindex.type->getNestedDataType()->equals(*attr.type))) \
         return Some;
 
 
