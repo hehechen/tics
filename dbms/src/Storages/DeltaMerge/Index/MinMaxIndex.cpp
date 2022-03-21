@@ -61,7 +61,6 @@ inline std::pair<size_t, size_t> minmax(const IColumn & column, const ColumnVect
 
 void MinMaxIndex::addPack(const IColumn & column, const ColumnVector<UInt8> * del_mark)
 {
-    const IColumn * column_ptr = &column;
     auto size = column.size();
     bool has_null = false;
     if (column.isColumnNullable())
@@ -70,7 +69,6 @@ void MinMaxIndex::addPack(const IColumn & column, const ColumnVector<UInt8> * de
 
         const auto & nullable_column = static_cast<const ColumnNullable &>(column);
         const auto & null_mark_data = nullable_column.getNullMapColumn().getData();
-        column_ptr = &nullable_column.getNestedColumn();
 
         for (size_t i = 0; i < size; ++i)
         {
@@ -82,7 +80,7 @@ void MinMaxIndex::addPack(const IColumn & column, const ColumnVector<UInt8> * de
         }
     }
 
-    const IColumn & updated_column = *column_ptr;
+    const IColumn & updated_column = column;
     auto [min_index, max_index] = details::minmax(updated_column, del_mark, 0, updated_column.size());
     if (min_index != NONE_EXIST)
     {
