@@ -266,7 +266,10 @@ private:
             if (!rsindex)
                 rsindex = load();
         }
-        indexes.emplace(col_id, rsindex);
+        if (rsindex)
+        {
+            indexes.emplace(col_id, rsindex);
+        }
     }
 
     void tryLoadIndex(const ColId col_id)
