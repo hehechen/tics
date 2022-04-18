@@ -19,6 +19,7 @@
 #include <Poco/Logger.h>
 #include <Storages/DeltaMerge/Filter/RSOperator.h>
 #include <Storages/DeltaMerge/FilterParser/FilterParser.h>
+#include <Storages/Transaction/Collator.h>
 #include <Storages/Transaction/TiDB.h>
 #include <common/logger_useful.h>
 
@@ -136,6 +137,11 @@ inline RSOperatorPtr parseTiCompareExpr( //
                 return createUnsupported(expr.ShortDebugString(), "ColumnRef with no field type is not supported", false);
 
             auto field_type = child.field_type().tp();
+            auto collate = -child.field_type().collate();
+            if ((field_type == TiDB::TypeVarchar || field_type == TiDB::TypeVarString || field_type == TiDB::TypeString) && (collate == TiDB::ITiDBCollator::UTF8_GENERAL_CI || collate == TiDB::ITiDBCollator::UTF8MB4_GENERAL_CI || collate == TiDB::ITiDBCollator::UTF8_UNICODE_CI || collate == TiDB::ITiDBCollator::UTF8MB4_UNICODE_CI))
+            {
+                return createUnsupported(expr.ShortDebugString() + toString(collate), " collator is not supported", false);
+            }
             if (!isRoughSetFilterSupportType(field_type))
                 return createUnsupported(
                     expr.ShortDebugString(),
@@ -156,7 +162,11 @@ inline RSOperatorPtr parseTiCompareExpr( //
                 left = OperandType::Literal;
             else if (child_idx == 1)
                 right = OperandType::Literal;
-
+            auto collate = -child.field_type().collate();
+            if ((child.tp() == tipb::ExprType::String) && (collate == TiDB::ITiDBCollator::UTF8_GENERAL_CI || collate == TiDB::ITiDBCollator::UTF8MB4_GENERAL_CI || collate == TiDB::ITiDBCollator::UTF8_UNICODE_CI || collate == TiDB::ITiDBCollator::UTF8MB4_UNICODE_CI))
+            {
+                return createUnsupported(expr.ShortDebugString() + toString(collate), " collator is not supported", false);
+            }
             if (is_timestamp_column)
             {
                 auto literal_type = child.field_type().tp();

@@ -59,7 +59,7 @@ private:
     {}
     static void set(UInt8 * offset, UInt8 charVal, int pos);
     static int indexOffsetBySize(int valueSize);
-    void _putValue(UInt8 * packAddr, String && value);
+    void _putValue(UInt8 * packAddr, String value);
     static bool isSet(UInt8 * offset, UInt8 charVal, int pos);
     RSResult isValue(UInt8 * packAddr, String value);
     static std::vector<int> INDEX_OFFSET;

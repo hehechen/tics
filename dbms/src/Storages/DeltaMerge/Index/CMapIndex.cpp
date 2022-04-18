@@ -3,6 +3,8 @@
 //
 
 #include "CMapIndex.h"
+
+#include <boost/algorithm/string/trim.hpp>
 namespace DB
 {
 namespace DM
@@ -52,8 +54,9 @@ int CMapIndex::indexOffsetBySize(int valueSize)
     return 1 << ceil_log2(valueSize);
 }
 
-void CMapIndex::_putValue(UInt8 * packAddr, String && value)
+void CMapIndex::_putValue(UInt8 * packAddr, String value)
 {
+    boost::trim_right(value);
     int valueSize = value.size();
 
     UInt8 * offset = packAddr + indexOffsetBySize(valueSize);
@@ -112,6 +115,7 @@ bool CMapIndex::isSet(UInt8 * offset, UInt8 charVal, int pos)
 
 RSResult CMapIndex::isValue(UInt8 * packAddr, String value)
 {
+    boost::trim_right(value);
     int valueSize = value.size();
 
     UInt8 * offset = packAddr + indexOffsetBySize(valueSize);
