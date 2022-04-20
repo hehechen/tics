@@ -29,7 +29,11 @@ public:
 
     String name() override { return "like"; }
 
-    RSResult roughCheck(size_t /*pack_id*/, const RSCheckParam & /*param*/) override { return Some; }
+    RSResult roughCheck(size_t pack_id, const RSCheckParam & param) override
+    {
+        GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex);
+        return rsindex->checkEqual(pack_id, value, rsindex->getType());
+    }
 };
 
 

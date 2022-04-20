@@ -72,7 +72,10 @@ public:
     {
         return rs_index->checkGreaterEqual(pack_index, value, dataType, nan_direction);
     }
-
+    RSResult checkLike(size_t pack_index, const Field & value, const DataTypePtr & dataType)
+    {
+        return rs_index->checkLike(pack_index, value, dataType);
+    }
     String getIndexNameSuffix()
     {
         return rs_index->getIndexNameSuffix();
@@ -133,10 +136,6 @@ public:
 private:
     DataTypePtr type;
     RSIndexPtr rs_index;
-    using HasValueMarkPtr = std::shared_ptr<PaddedPODArray<UInt8>>;
-    using HasNullMarkPtr = std::shared_ptr<PaddedPODArray<UInt8>>;
-    HasNullMarkPtr has_null_marks;
-    HasValueMarkPtr has_value_marks;
     RSIndexManager(const DataTypePtr & type, RSIndexPtr index)
         : type(type)
         , rs_index(index)

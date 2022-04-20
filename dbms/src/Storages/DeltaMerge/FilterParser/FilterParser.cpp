@@ -110,12 +110,6 @@ inline RSOperatorPtr parseTiCompareExpr( //
     const TimezoneInfo & timezone_info,
     const LoggerPtr & /*log*/)
 {
-    if (unlikely(expr.children_size() != 2))
-        return createUnsupported(expr.ShortDebugString(),
-                                 tipb::ScalarFuncSig_Name(expr.sig()) + " with " + DB::toString(expr.children_size())
-                                     + " children is not supported",
-                                 false);
-
     /// Only support `column` `op` `literal` now.
 
     Attr attr;
@@ -247,6 +241,9 @@ inline RSOperatorPtr parseTiCompareExpr( //
     case FilterParser::RSFilterType::LessEqual:
         op = createLessEqual(attr, value, -1);
         break;
+    case FilterParser::RSFilterType::Like:
+        op = createLike(attr, value);
+        break;
     default:
         op = createUnsupported(expr.ShortDebugString(), "Unknown compare type: " + tipb::ExprType_Name(expr.tp()), false);
         break;
@@ -318,13 +315,13 @@ RSOperatorPtr parseTiExpr(const tipb::Expr & expr,
         case FilterParser::RSFilterType::GreaterEqual:
         case FilterParser::RSFilterType::Less:
         case FilterParser::RSFilterType::LessEqual:
+        case FilterParser::RSFilterType::Like:
+        case FilterParser::RSFilterType::NotLike:
             op = parseTiCompareExpr(expr, filter_type, columns_to_read, creator, timezone_info, log);
             break;
 
         case FilterParser::RSFilterType::In:
         case FilterParser::RSFilterType::NotIn:
-        case FilterParser::RSFilterType::Like:
-        case FilterParser::RSFilterType::NotLike:
         case FilterParser::RSFilterType::Unsupported:
             op = createUnsupported(expr.ShortDebugString(), tipb::ScalarFuncSig_Name(expr.sig()) + " is not supported", false);
             break;
@@ -602,6 +599,7 @@ std::unordered_map<tipb::ScalarFuncSig, FilterParser::RSFilterType> FilterParser
     {tipb::ScalarFuncSig::UnaryNotInt, FilterParser::RSFilterType::Not},
     {tipb::ScalarFuncSig::UnaryNotReal, FilterParser::RSFilterType::Not},
 
+    {tipb::ScalarFuncSig::LikeSig, FilterParser::RSFilterType::Like},
     // {tipb::ScalarFuncSig::UnaryMinusInt, "negate"},
     // {tipb::ScalarFuncSig::UnaryMinusReal, "negate"},
     // {tipb::ScalarFuncSig::UnaryMinusDecimal, "negate"},
@@ -716,7 +714,6 @@ std::unordered_map<tipb::ScalarFuncSig, FilterParser::RSFilterType> FilterParser
     //{tipb::ScalarFuncSig::IsIPv6, "cast"},
     //{tipb::ScalarFuncSig::UUID, "cast"},
 
-    // {tipb::ScalarFuncSig::LikeSig, "like3Args"},
     //{tipb::ScalarFuncSig::RegexpBinarySig, "cast"},
     //{tipb::ScalarFuncSig::RegexpSig, "cast"},
 

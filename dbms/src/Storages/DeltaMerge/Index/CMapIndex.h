@@ -50,6 +50,7 @@ public:
     {
         return cmap_buffers.size() * 64 * 32 * 2;
     }
+    RSResult checkLike(size_t pack_id, const Field & value, const DataTypePtr & type);
 
 private:
     using CmapBufferPtr = std::shared_ptr<PaddedPODArray<UInt8>>;
