@@ -36,6 +36,10 @@ public:
     virtual RSResult checkEqual(size_t pack_id, const Field & value, const DataTypePtr & type) = 0;
     virtual RSResult checkGreater(size_t pack_id, const Field & value, const DataTypePtr & type, int /*nan_direction_hint*/) = 0;
     virtual RSResult checkGreaterEqual(size_t pack_id, const Field & value, const DataTypePtr & type, int /*nan_direction_hint*/) = 0;
+    virtual RSResult checkLike(size_t, const Field &, const DataTypePtr &)
+    {
+        return RSResult::Some;
+    }
     virtual String getIndexNameSuffix() = 0;
     virtual size_t byteSize() const = 0;
     virtual ~RSIndex(){};

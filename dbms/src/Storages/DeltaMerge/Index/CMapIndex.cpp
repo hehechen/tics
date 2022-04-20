@@ -192,5 +192,23 @@ RSResult CMapIndex::checkGreaterEqual(size_t pack_id, const Field & value, const
     return RSResult::Some;
 }
 
+RSResult CMapIndex::checkLike(size_t pack_id, const Field & value, const DataTypePtr & type)
+{
+    if (type->getTypeId() != TypeIndex::String && (type->getTypeId() == TypeIndex::Nullable && type->getNestedDataType()->getTypeId() != TypeIndex::String))
+    {
+        return RSResult::Some;
+    }
+    if (value.getType() != Field::Types::String)
+    {
+        return RSResult::Some;
+    }
+    String str = value.safeGet<String>();
+    if (isValue(cmap_buffers[pack_id]->data(), str) == RSResult::None)
+    {
+        return RSResult::Some;
+    }
+    return RSResult::Some;
+}
+
 } // namespace DM
 } // namespace DB
