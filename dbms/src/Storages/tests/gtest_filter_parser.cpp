@@ -473,9 +473,16 @@ try
     "name":{"L":"t_111","O":"t_111"},"partition":null,
     "comment":"Mocked.","id":30,"schema_version":-1,"state":0,"tiflash_replica":{"Count":0},"update_timestamp":1636471547239654
 })json";
+
+    {
+        // Greater between col and literal (not supported since the type of col_1 is string)
+        auto rs_operator = generateRsOperator(table_info_json, "select * from default.t_111 where col_1 like '1\\_a_a%23'");
+        EXPECT_EQ(rs_operator->name(), "unsupported");
+    }
+
     {
         // Greater between col and literal (not supported since the type of col_3 is floating point)
-        auto rs_operator = generateRsOperator(table_info_json, "select * from default.t_111 where col_3 > 1234568.890123");
+        auto rs_operator = generateRsOperator(table_info_json, "select * from default.t_111 where col_3 > 1234568.890123 collate utf8mb4_general_ci");
         EXPECT_EQ(rs_operator->name(), "unsupported");
     }
 

@@ -143,7 +143,7 @@ RSOperatorPtr createLessEqual(const Attr & attr, const Field & value, int null_d
 RSOperatorPtr createIn(const Attr & attr, const Fields & values);
 RSOperatorPtr createNotIn(const Attr & attr, const Fields & values);
 //
-RSOperatorPtr createLike(const Attr & attr, const Field & value);
+RSOperatorPtr createLike(const Attr & attr, const Field & value, const Field & escape_char);
 RSOperatorPtr createNotLike(const Attr & attr, const Field & values);
 //
 RSOperatorPtr createUnsupported(const String & content, const String & reason, bool is_not);

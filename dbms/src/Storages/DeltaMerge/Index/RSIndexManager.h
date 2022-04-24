@@ -72,9 +72,9 @@ public:
     {
         return rs_index->checkGreaterEqual(pack_index, value, dataType, nan_direction);
     }
-    RSResult checkLike(size_t pack_index, const Field & value, const DataTypePtr & dataType)
+    RSResult checkLike(size_t pack_index, const Field & value, const Field & escape_char, const DataTypePtr & dataType)
     {
-        return rs_index->checkLike(pack_index, value, dataType);
+        return rs_index->checkLike(pack_index, value, escape_char, dataType);
     }
     String getIndexNameSuffix()
     {

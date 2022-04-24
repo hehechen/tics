@@ -40,7 +40,7 @@ RSOperatorPtr createGreaterEqual(const Attr & attr, const Field & value, int nul
 RSOperatorPtr createIn(const Attr & attr, const Fields & values)                                { return std::make_shared<In>(attr, values); }
 RSOperatorPtr createLess(const Attr & attr, const Field & value, int null_direction)            { return std::make_shared<Less>(attr, value, null_direction); }
 RSOperatorPtr createLessEqual(const Attr & attr, const Field & value, int null_direction)       { return std::make_shared<LessEqual>(attr, value, null_direction); }
-RSOperatorPtr createLike(const Attr & attr, const Field & value)                                { return std::make_shared<Like>(attr, value); }
+RSOperatorPtr createLike(const Attr & attr, const Field & value, const Field & escape_char)     { return std::make_shared<Like>(attr, value, escape_char); }
 RSOperatorPtr createNot(const RSOperatorPtr & op)                                               { return std::make_shared<Not>(op); }
 RSOperatorPtr createNotEqual(const Attr & attr, const Field & value)                            { return std::make_shared<NotEqual>(attr, value); }
 RSOperatorPtr createNotIn(const Attr & attr, const Fields & values)                             { return std::make_shared<NotIn>(attr, values); }

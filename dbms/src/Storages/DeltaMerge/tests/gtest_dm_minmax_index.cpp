@@ -119,6 +119,9 @@ bool checkMatch(
         is_common_handle,
         1);
 
+    auto & settings = context.getSettingsRef();
+    settings.dt_segment_stable_pack_rows = 10;
+
     store->write(context, context.getSettingsRef(), block);
     store->flushCache(context, all_range);
     store->mergeDeltaAll(context);
@@ -128,6 +131,7 @@ bool checkMatch(
     streams[0]->readPrefix();
     auto rows = streams[0]->read().rows();
     streams[0]->readSuffix();
+    //   sleep(10);
     store->drop();
 
     return rows != 0;
@@ -157,10 +161,32 @@ bool checkPkMatch(const String & test_case, Context & context, const String & ty
     return checkMatch(test_case, context, type, tuples, filter, is_common_handle, true);
 }
 
+CSVTuples generateTuples(CSVTuple basic_tuple, size_t tuple_num)
+{
+    CSVTuples result(tuple_num, basic_tuple);
+    for (size_t i = 1; i < tuple_num; i++)
+    {
+        CSVTuple origin_tuple = result[i - 1];
+        for (size_t j = 0; j < origin_tuple.size(); j++)
+        {
+            if (j == 2)
+            {
+                continue;
+            }
+            result[i][j] = toString(std::stoi(result[i - 1][j]) + 1);
+        }
+    }
+    return result;
+}
+
 TEST_F(DMMinMaxIndexTest, Basic)
 try
 {
     const auto * case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    ASSERT_EQ(true, checkMatch(case_name, *context, "String", "hehe", createLike(attr("String"), Field((String) "1|_a\\_a%23"), Field((String)"\\"))));
+    //CSVTuples tuples = generateTuples({"0", "0", "0", "1111"}, 300);
+    //   ASSERT_EQ(false, checkMatch(case_name, *context, "String", tuples, createEqual(attr("String"), Field((String)"1111"))));
+
     // clang-format off
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createEqual(attr("Int64"), Field((Int64)100))));
     ASSERT_EQ(false, checkMatch(case_name, *context, "Int64", "100", createEqual(attr("Int64"), Field((Int64)101))));
@@ -220,7 +246,7 @@ try
     ASSERT_EQ(true, checkPkMatch(case_name, *context, "Int64", "100", createGreater(pkAttr(), Field((Int64)99), 0), false));
 
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createNotEqual(attr("Int64"), Field((Int64)101))));
-    ASSERT_EQ(true, checkMatch(case_name, *context, "String", "test_like_filter", createLike(attr("String"), Field(Field((String) "*filter")))));
+    ASSERT_EQ(true, checkMatch(case_name, *context, "String", "test_like_filter", createLike(attr("String"), Field((String) "*filter"), Field((String) "\\"))));
     ASSERT_EQ(true, checkMatch(case_name, *context, "String", "test_not_like_filter", createNotLike(attr("String"), Field(Field((String) "*test_like_filter")))));
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createNotIn(attr("Int64"), {Field((Int64)101), Field((Int64)102), Field((Int64)103)})));
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createIn(attr("Int64"), {Field((Int64)100), Field((Int64)101), Field((Int64)102)})));
