@@ -23,8 +23,8 @@ namespace DM
 class Like : public ColCmpVal
 {
 public:
-    Like(const Attr & attr_, const Field & value_)
-        : ColCmpVal(attr_, value_, 0)
+    Like(const Attr & attr_, const Field & value_, const Field & escape_char)
+    : ColCmpVal(attr_, value_, 0), escape_char(escape_char)
     {}
 
     String name() override { return "like"; }
@@ -32,8 +32,10 @@ public:
     RSResult roughCheck(size_t pack_id, const RSCheckParam & param) override
     {
         GET_RSINDEX_FROM_PARAM_NOT_FOUND_RETURN_SOME(param, attr, rsindex);
-        return rsindex->checkEqual(pack_id, value, rsindex->getType());
+        return rsindex->checkLike(pack_id, value, escape_char, rsindex->getType());
     }
+private:
+    Field escape_char;
 };
 
 

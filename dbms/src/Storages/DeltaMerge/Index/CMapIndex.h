@@ -50,7 +50,7 @@ public:
     {
         return cmap_buffers.size() * 64 * 32 * 2;
     }
-    RSResult checkLike(size_t pack_id, const Field & value, const DataTypePtr & type);
+    RSResult checkLike(size_t pack_id, const Field & value, const Field & escape_char, const DataTypePtr & type);
 
 private:
     using CmapBufferPtr = std::shared_ptr<PaddedPODArray<UInt8>>;
@@ -60,11 +60,13 @@ private:
     {}
     static void set(UInt8 * offset, UInt8 charVal, int pos);
     static int indexOffsetBySize(int valueSize);
-    void _putValue(UInt8 * packAddr, String value);
+    void _putValue(UInt8 * packAddr, std::string_view value);
     static bool isSet(UInt8 * offset, UInt8 charVal, int pos);
     RSResult isValue(UInt8 * packAddr, String value);
     static std::vector<int> INDEX_OFFSET;
-    RSResult checkNullableEqual(size_t pack_index, const Field & value, const DataTypePtr & type);
+    RSResult isLike(UInt8 * packAddr, String value, Int64 escape_char);
+    size_t getLikePatternMinLength(String & str, Int64 escape_char);
+    static std::vector<int> size_array;
 };
 } // namespace DM
 } // namespace DB

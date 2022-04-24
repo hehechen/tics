@@ -63,7 +63,7 @@ inline bool isRoughSetFilterSupportType(const Int32 field_type)
     case TiDB::TypeVarString:
     case TiDB::TypeString:
         return true;
-        // For these types, should take collation into consideration. Disable them.
+    // For these types, should take collation into consideration. Disable them.
     case TiDB::TypeJSON:
     case TiDB::TypeTinyBlob:
     case TiDB::TypeMediumBlob:
@@ -112,8 +112,24 @@ inline RSOperatorPtr parseTiCompareExpr( //
 {
     /// Only support `column` `op` `literal` now.
 
+    if (expr.children_size() != 2 && filter_type != FilterParser::RSFilterType::Like)
+    {
+        return createUnsupported(expr.ShortDebugString(),
+                                 tipb::ScalarFuncSig_Name(expr.sig()) + " with " + DB::toString(expr.children_size())
+                                     + " children is not supported",
+                                 false);
+    }
+    if (filter_type == FilterParser::RSFilterType::Like && expr.children_size() != 3)
+    {
+        return createUnsupported(expr.ShortDebugString(),
+                                 tipb::ScalarFuncSig_Name(expr.sig()) + " with " + DB::toString(expr.children_size())
+                                     + " children is not supported",
+                                 false);
+    }
     Attr attr;
     Field value;
+    // for 'Like' filter
+    Field escape_char;
     OperandType left = OperandType::Unknown;
     OperandType right = OperandType::Unknown;
     bool is_timestamp_column = false;
@@ -151,7 +167,15 @@ inline RSOperatorPtr parseTiCompareExpr( //
         }
         else if (isLiteralExpr(child))
         {
-            value = decodeLiteral(child);
+            if (child_idx == 2)
+            {
+                escape_char = decodeLiteral(child);
+            }
+            else
+            {
+                value = decodeLiteral(child);
+            }
+
             if (child_idx == 0)
                 left = OperandType::Literal;
             else if (child_idx == 1)
@@ -211,9 +235,9 @@ inline RSOperatorPtr parseTiCompareExpr( //
         case FilterParser::RSFilterType::LessEqual:
             filter_type_with_direction = FilterParser::RSFilterType::GreaterEqual;
             break;
-            // Commutative operators, ignored.
-            // case FilterParser::RSFilterType::Equal:
-            // case FilterParser::RSFilterType::NotEqual:
+        // Commutative operators, ignored.
+        // case FilterParser::RSFilterType::Equal:
+        // case FilterParser::RSFilterType::NotEqual:
         default:
             break;
         }
@@ -242,7 +266,7 @@ inline RSOperatorPtr parseTiCompareExpr( //
         op = createLessEqual(attr, value, -1);
         break;
     case FilterParser::RSFilterType::Like:
-        op = createLike(attr, value);
+        op = createLike(attr, value, escape_char);
         break;
     default:
         op = createUnsupported(expr.ShortDebugString(), "Unknown compare type: " + tipb::ExprType_Name(expr.tp()), false);
