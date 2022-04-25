@@ -248,7 +248,7 @@ private:
                                                                             dmfile->configuration->getChecksumFrameLength());
                 index_buf->seek(dmfile->colIndexOffset(file_name_base));
                 auto header_size = dmfile->configuration->getChecksumHeaderLength();
-                auto frame_total_size = dmfile->configuration->getChecksumFrameLength();
+                auto frame_total_size = dmfile->configuration->getChecksumFrameLength() + header_size;
                 auto frame_count = index_file_size / frame_total_size + (index_file_size % frame_total_size != 0);
                 return RSIndexManager::read(type, *index_buf, index_file_size - header_size * frame_count, exist_index_file_suffix);
             }
