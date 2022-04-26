@@ -3,7 +3,9 @@
 //
 
 #include "CMapIndex.h"
+
 #include <Common/Logger.h>
+
 #include <boost/algorithm/string/trim.hpp>
 namespace DB
 {
@@ -215,7 +217,7 @@ RSResult CMapIndex::isLike(UInt8 * packAddr, String value, Int64 escape_char)
     boost::trim_right(value);
     int min_length = getLikePatternMinLength(value, escape_char);
 
-    for (auto i:INDEX_POS_COUNT)
+    for (auto i : INDEX_POS_COUNT)
     {
         if (i < min_length && i != MAX_POSISTIONS)
         {
@@ -273,11 +275,7 @@ RSResult CMapIndex::checkLike(size_t pack_id, const Field & value, const Field &
         return RSResult::Some;
     }
     String str = value.safeGet<String>();
-    if (isValue(cmap_buffers[pack_id]->data(), str) == RSResult::None)
-    {
-        return RSResult::Some;
-    }
-    return RSResult::Some;
+    return isLike(cmap_buffers[pack_id]->data(), str, escape_char.safeGet<Int64>());
 }
 
 } // namespace DM
