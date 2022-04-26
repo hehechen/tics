@@ -339,14 +339,14 @@ RSOperatorPtr parseTiExpr(const tipb::Expr & expr,
         case FilterParser::RSFilterType::GreaterEqual:
         case FilterParser::RSFilterType::Less:
         case FilterParser::RSFilterType::LessEqual:
-        case FilterParser::RSFilterType::Like:
-        case FilterParser::RSFilterType::NotLike:
+        case FilterParser::RSFilterType::In:
+        case FilterParser::RSFilterType::NotIn:
             op = parseTiCompareExpr(expr, filter_type, columns_to_read, creator, timezone_info, log);
             break;
 
-        case FilterParser::RSFilterType::In:
-        case FilterParser::RSFilterType::NotIn:
         case FilterParser::RSFilterType::Unsupported:
+        case FilterParser::RSFilterType::Like:
+        case FilterParser::RSFilterType::NotLike:
             op = createUnsupported(expr.ShortDebugString(), tipb::ScalarFuncSig_Name(expr.sig()) + " is not supported", false);
             break;
         }

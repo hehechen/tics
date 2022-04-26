@@ -119,9 +119,6 @@ bool checkMatch(
         is_common_handle,
         1);
 
-    auto & settings = context.getSettingsRef();
-    settings.dt_segment_stable_pack_rows = 10;
-
     store->write(context, context.getSettingsRef(), block);
     store->flushCache(context, all_range);
     store->mergeDeltaAll(context);
@@ -183,10 +180,12 @@ TEST_F(DMMinMaxIndexTest, Basic)
 try
 {
     const auto * case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    ASSERT_EQ(true, checkMatch(case_name, *context, "String", "hehe", createLike(attr("String"), Field((String) "1|_a\\_a%23"), Field((String)"\\"))));
-    //CSVTuples tuples = generateTuples({"0", "0", "0", "1111"}, 300);
-    //   ASSERT_EQ(false, checkMatch(case_name, *context, "String", tuples, createEqual(attr("String"), Field((String)"1111"))));
+    //String test_str(1024*1024+32, 'g');
+    //ASSERT_EQ(true, checkMatch(case_name, *context, "String", test_str, createLike(attr("String"), Field(test_str), Field((Int64)'\\'))));
+    //CSVTuples tuples = generateTuples({"0", "0", "0", "1111"}, 3000);
+    //ASSERT_EQ(false, checkMatch(case_name, *context, "String", tuples, createEqual(attr("String"), Field((String)"1111"))));
 
+    ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "hehe"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Nullable(String)"), Field((String)("hehe")))));
     // clang-format off
     ASSERT_EQ(true, checkMatch(case_name, *context, "Int64", "100", createEqual(attr("Int64"), Field((Int64)100))));
     ASSERT_EQ(false, checkMatch(case_name, *context, "Int64", "100", createEqual(attr("Int64"), Field((Int64)101))));
@@ -324,8 +323,6 @@ try
     ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "hehe"}, {"1", "1", "0", "\\N"}}, createEqual(attr("Nullable(String)"), Field((String)("hehe")))));
     ASSERT_EQ(true, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("Nullable(String)"), Field((String)("hehe")))));
     ASSERT_EQ(false, checkMatch(case_name, *context, "Nullable(String)", {{"0", "0", "0", "haha"}, {"1", "1", "0", "hehe"}}, createEqual(attr("Nullable(String)"), Field((String)("hoho")))));
-
-
 }
 CATCH
 
