@@ -44,6 +44,7 @@ namespace FailPoints
 {
 extern const char force_enable_region_persister_compatible_mode[];
 extern const char force_disable_region_persister_compatible_mode[];
+extern const char exception_before_page_file_write_sync[];
 } // namespace FailPoints
 
 void RegionPersister::drop(RegionID region_id, const RegionTaskLock &)
@@ -174,7 +175,6 @@ PS::V1::PageStorage::Config getV1PSConfig(const PS::V2::PageStorage::Config & co
     c.version_set_config.compact_hint_delta_entries = config.version_set_config.compact_hint_delta_entries;
     return c;
 }
-
 void RegionPersister::forceTransformKVStoreV2toV3()
 {
     assert(page_reader != nullptr);
@@ -202,14 +202,28 @@ void RegionPersister::forceTransformKVStoreV2toV3()
 
         // Will rewrite into V3 one by one.
         // The region data is big. It is not a good idea to combine pages.
+        if ((rand() % 100 == 1))
+        {
+            FailPointHelper::enableFailPoint(FailPoints::exception_before_page_file_write_sync);
+        }
         page_writer->write(std::move(write_batch_transform), nullptr);
-
+        if ((rand() % 100 == 1))
+        {
+            abort();
+        }
         // Record del page_id
         write_batch_del_v2.delPage(page.page_id);
+        if ((rand() % 100 == 1))
+        {
+            abort();
+        }
     };
 
     page_reader->traverse(meta_transform_acceptor, /*only_v2*/ true, /*only_v3*/ false);
-
+    if ((rand() % 10 == 1))
+    {
+        abort();
+    }
     // DEL must call after rewrite.
     page_writer->writeIntoV2(std::move(write_batch_del_v2), nullptr);
 }

@@ -38,6 +38,7 @@ extern const int LOGICAL_ERROR;
 namespace FailPoints
 {
 extern const char force_set_dtfile_exist_when_acquire_id[];
+extern const char exception_before_page_file_write_sync[];
 } // namespace FailPoints
 
 namespace DM
@@ -241,7 +242,6 @@ StoragePool::StoragePool(Context & global_ctx, NamespaceId ns_id_, StoragePathPo
         throw Exception(fmt::format("Unknown PageStorageRunMode {}", static_cast<UInt8>(run_mode)), ErrorCodes::LOGICAL_ERROR);
     }
 }
-
 void StoragePool::forceTransformMetaV2toV3()
 {
     assert(meta_storage_v2 != nullptr);
@@ -277,15 +277,34 @@ void StoragePool::forceTransformMetaV2toV3()
                                       std::make_shared<ReadBufferFromMemory>(page_transform.data.begin(),
                                                                              page_transform.data.size()),
                                       page_transform.data.size());
+        if ((rand() % 100 == 1))
+        {
+            abort();
+        }
         // Record del for V2
         write_batch_del_v2.delPage(page_transform.page_id);
+        if ((rand() % 100 == 1))
+        {
+            abort();
+        }
     }
 
+    if ((rand() % 100 == 1))
+    {
+        FailPointHelper::enableFailPoint(FailPoints::exception_before_page_file_write_sync);
+    }
     // Will rewrite into V3.
     meta_transform_storage_writer->write(std::move(write_batch_transform), nullptr);
-
+    if ((rand() % 10 == 1))
+    {
+        abort();
+    }
     // DEL must call after rewrite.
     meta_transform_storage_writer->writeIntoV2(std::move(write_batch_del_v2), nullptr);
+    if ((rand() % 10 == 1))
+    {
+        abort();
+    }
 }
 
 PageStorageRunMode StoragePool::restore()
