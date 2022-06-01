@@ -18,6 +18,7 @@
 #include <Storages/Transaction/Datum.h>
 #include <Storages/Transaction/DatumCodec.h>
 #include <Storages/Transaction/RowCodec.h>
+#include <common/logger_useful.h>
 
 
 namespace DB
@@ -336,6 +337,7 @@ inline bool addDefaultValueToColumnIfPossible(const ColumnInfo & column_info, Bl
     // not null or has no default value, tidb will fill with specific value.
     auto * raw_column = const_cast<IColumn *>((block.getByPosition(block_column_pos)).column.get());
     raw_column->insert(column_info.defaultValueToField());
+    LOG_FMT_TRACE(&Poco::Logger::get("RowToCol"), "col id:{} col name: {}, block_column_pos {}", column_info.id, column_info.name, block_column_pos);
     return true;
 }
 
@@ -432,6 +434,7 @@ bool appendRowV2ToBlockImpl(
                 }
                 // ColumnNullable::insertDefault just insert a null value
                 raw_column->insertDefault();
+                LOG_FMT_TRACE(&Poco::Logger::get("RowToCol"), "insert null, col id:{} col name: {}, block_column_pos {}", column_info.id, column_info.name, block_column_pos);
                 id_null++;
             }
             else
