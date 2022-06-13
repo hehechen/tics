@@ -261,11 +261,11 @@ void DMFileWriter::writeColumn(ColId col_id, const IDataType & type, const IColu
             [&](const IDataType::SubstreamPath & substream) {
                 const auto name = DMFile::getFileNameBase(col_id, substream);
                 auto & stream = column_streams.at(name);
-                if (stream->minmaxes)
+                if (stream->rsindexes)
                 {
                     // For EXTRA_HANDLE_COLUMN_ID, we ignore del_mark when add minmax index.
                     // Because we need all rows which satisfy a certain range when place delta index no matter whether the row is a delete row.
-                    stream->minmaxes->addPack(type, column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
+                    stream->rsindexes->addPack(type, column, col_id == EXTRA_HANDLE_COLUMN_ID ? nullptr : del_mark);
                 }
 
                 /// There could already be enough data to compress into the new block.
