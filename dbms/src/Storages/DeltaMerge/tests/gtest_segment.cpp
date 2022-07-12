@@ -27,7 +27,9 @@ namespace tests
 class SegmentOperationTest : public SegmentTestBasic
 {
 protected:
-    static void SetUpTestCase() {}
+    static void SetUpTestCase() {
+        DB::tests::TiFlashTestEnv::setupLogger("debug");
+    }
 };
 
 TEST_F(SegmentOperationTest, Issue4956)
@@ -80,6 +82,7 @@ try
     options.is_common_handle = true;
     reloadWithOptions(options);
     randomSegmentTest(100);
+    EXPECT_EQ(1,0);
 }
 CATCH
 
